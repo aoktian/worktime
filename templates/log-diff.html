@@ -1,0 +1,62 @@
+{{template "header.html" .}}
+
+<style type="text/css">
+ins {
+    background-color: #dff0d8;
+}
+del {
+    background-color: #f2dede;
+}
+</style>
+
+</head><body>
+
+{{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
+
+
+<div style="display: none;">
+<div id="oldHtml">{{.log.Value | html}}</div>
+<div id="newHtml">{{.log.ValueTo | html}}</div>
+</div>
+
+<div class="container-fluid"><div class="row">
+
+<div class="col-6">
+<div class="card">
+<div class="card-header">修改前</div>
+<div class="card-body" id="oldDiffHtml"></div>
+</div>
+</div>
+
+
+<div class="col-6">
+<div class="card">
+<div class="card-header">修改后</div>
+<div class="card-body" id="newDiffHtml"></div>
+</div>
+</div>
+
+</div></div>
+
+{{template "footer.html" .}}
+
+<script src="/static/htmldiff/diff_match_patch.js"></script>
+<script src="/static/htmldiff/htmldiff.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function() {
+    var html1 = $('#oldHtml').html()
+    var html2 = $('#newHtml').html()
+
+    let diffHtml = new HtmlDiff()
+    let {time, oldDiffHtml, newDiffHtml} = diffHtml.diff_launch(html1, html2)
+
+    $('#oldDiffHtml').html(oldDiffHtml)
+    $('#newDiffHtml').html(newDiffHtml)
+});
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+{{range $key, $value := .values}}
+{{if eq $value.ProjectId $.filterId}}
+    <option value="{{$value.Id}}" {{if eq $value.Id $.selected}}selected{{end}}>{{$value.Name}}</option>
+{{end}}
+{{end}}

@@ -1,0 +1,118 @@
+package models
+
+import (
+	"errors"
+	"log"
+	"strings"
+	"webserver/utils"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
+type User struct {
+	Id         int    `json:"id" xorm:"pk autoincr notnull comment('主键')"`
+	Account    string `json:"account" xorm:"notnull unique comment('账号')"`
+	Name       string `json:"name" xorm:"notnull unique comment('姓名')"`
+	Password   string `json:"-" xorm:"notnull comment('密码')"`
+	Department int    `json:"department" xorm:"notnull comment('部门')"`
+	Team       int    `json:"team" xorm:"notnull comment('用户组')"`
+	IsAdmin    bool   `json:"is_admin" xorm:"tinyint(1) notnull default(0) comment('是否管理员')"`
+	CreatedAt  int64  `json:"created_at" xorm:"notnull comment('创建时间') created"`
+	UpdatedAt  int64  `json:"updated_at" xorm:"notnull comment('更新时间') updated"`
+
+	Token string `json:"token" xorm:"-"`
+}
+
+func (x *User) GetId() int {
+	return x.Id
+}
+
+func (u *User) SaveUser() error {
+	_, err := DB.InsertOne(u)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *User) GenerateFromPassword() ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+}
+
+// 使用gorm的hook在保存密码前对密码进行hash
+func (u *User) BeforeInsert() {
+	hashedPassword, err := u.GenerateFromPassword()
+	if err != nil {
+		log.Println(err)
+	}
+	u.Password = string(hashedPassword)
+	u.Account = strings.TrimSpace(u.Account)
+	u.Name = strings.TrimSpace(u.Name)
+}
+
+// 对哈希加密的密码进行比对校验
+func VerifyPassword(password, hashedPassword string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
+func LoginCheck(account, password string) (*User, error) {
+	u := &User{}
+
+	has, err := DB.Where("account = ?", account).Get(u)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, errors.New("user not found")
+	}
+
+	err = VerifyPassword(password, u.Password)
+	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+		return nil, err
+	}
+
+	token, err := utils.GenerateToken(u.Id)
+	if err != nil {
+		return nil, err
+	}
+	u.Token = token
+	return u, nil
+}
+
+func GetUserByID(id int) (*User, error) {
+	u := new(User)
+	has, err := DB.ID(id).Get(u)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, errors.New("user not found")
+	}
+
+	return u, nil
+}
+
+func CheckUserExist(id int) bool {
+	u := new(User)
+	has, err := DB.Where("id = ?", id).Get(u)
+	if err != nil {
+		return false
+	}
+	if !has {
+		return false
+	}
+	return true
+}
+
+func GetUsers() (map[int]*User, error) {
+	users := make([]*User, 0)
+	err := DB.Find(&users)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[int]*User)
+	for _, u := range users {
+		result[u.Id] = u
+	}
+	return result, nil
+}

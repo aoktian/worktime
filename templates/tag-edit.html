@@ -1,0 +1,41 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">编辑版本</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+<div class="modal-body" id="edit-tag-form">
+    <input type="hidden" name="id" value="{{.tag.Id}}" />
+<div class="mb-2">
+    <label class="form-label">输入名称</label>
+    <input class="form-control" type="text"
+        value="{{.tag.Name}}"
+        name="name"
+    />
+    <div class="form-text text-danger">建议名字不要超过5个字。</div>
+</div>
+
+<div class="mb-2">
+    <label class="form-label">开始时间</label>
+    <input class="form-control" type="date"
+        value="{{.tag.StartAt | unixToDay}}"
+        name="start_at"
+    />
+</div>
+<div class="mb-2">
+    <label class="form-label">结束时间</label>
+    <input class="form-control" type="date"
+        value="{{.tag.EndAt | unixToDay}}"
+        name="end_at"
+    />
+</div>
+
+
+</div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            <button onclick="_commit()" type="button" class="btn btn-primary">保存</button>
+        </div>
+    </div>
+</div>

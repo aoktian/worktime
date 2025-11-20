@@ -1,0 +1,35 @@
+<div class="card">
+    <div class="card-header d-flex align-items-center" onclick="$('#related-tasks-content').toggle();">
+        <div>关联任务</div>
+        <div class="ms-auto">
+            <i class="fa-solid fa-minus"></i>
+            <i class="fa-solid fa-plus"></i>
+        </div>
+    </div>
+
+    <div id="related-tasks-content">
+
+{{template "task-list.html" . }}
+
+
+<!-- 批量修改 开始-->
+<div class="container-fluid" id="batchModify">
+    <div class="row row-cols-lg-auto g-3 align-items-center">
+
+{{template "task-batch-modify.html" . }}
+
+<div class="col-12">
+    <button type="button" class="btn btn-danger" onclick="batchModify( _set_related );" >
+        <i class="fa-solid fa-screwdriver-wrench"></i> 批量修改
+    </button>
+</div>
+
+    </div>
+</div>
+<!-- 批量修改 结束-->
+
+    </div>
+
+<div class="mb-2"></div>
+
+</div>

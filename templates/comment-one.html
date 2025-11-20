@@ -1,0 +1,40 @@
+<div class="card mt-3" id="comment_{{.comment.Id}}">
+<div class="card-header d-flex align-items-center">
+    <div><i>
+        <span>#{{.comment.Id}}</span>
+        <span class="ms-5">作者：{{.comment.Author}}
+        ({{.comment.CreatedAt | formatDate}})</span>
+        <span class="ms-5" id="comment-last-modify-{{.comment.Id}}">修改：{{.comment.Editor}}
+        ({{.comment.UpdatedAt | formatDate}})</span>
+    </i></div>
+    <div class="ms-auto">
+        <button
+            class="btn btn-link "
+            onclick="_modify_comment({{.comment.Id}})"
+        >
+            <i class="fa-solid fa-pen-to-square"></i>
+            编辑
+        </button>
+        <button
+            class="btn btn-link ms-2"
+            onclick="ajax('/comment/log/{{.comment.Id}}')"
+        >
+            <i class="fa-solid fa-calendar-days"></i>日志
+        </button>
+    </div>
+</div>
+
+<div class="card-body">
+<div id="comment-content-{{.comment.Id}}">{{.comment.Content | html}}</div>
+</div>
+
+<div class="card-footer" id="edit-comment-buttons-{{.comment.Id}}" style="display: none;">
+<button class="btn btn-danger" onclick="_commit_comment({{.comment.Id}})">
+    <i class="fa-solid fa-floppy-disk"></i> 保存
+</button>
+<button class="btn btn-secondary ms-2" onclick="_modify_comment({{.comment.Id}})">
+    <i class="fa-solid fa-ban"></i> 取消
+</button>
+</div>
+
+</div>

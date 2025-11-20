@@ -1,0 +1,192 @@
+{{template "header.html" .}}</head><body>
+{{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
+
+<div class="container-fluid" id="taskfilter">
+    <div class="row row-cols-lg-auto g-3 align-items-center">
+        <div class="col-12">
+
+<div class="input-group">
+    <select itag="val" name="project"
+        class="form-select"
+        value="{{.filter.Project}}"
+        onchange="onChangePro( this.value, '#filterTags', '版本' );filter_result( 1 );"
+    >
+        <option value="0">项目</option>
+{{template "selection_map.html" (dict "values" .projects "selected" .filter.Project) }}
+    </select>
+    <select id="filterTags" itag="val" name="tag"
+        class="form-select"
+        value="{{.filter.Tag}}"
+        onchange="filter_result( 1 );"
+    >
+        <option value="0">版本</option>
+{{template "selection_tag.html" (dict "values" .tags "selected" .filter.Tag "filterId" .filter.Project) }}
+    </select>
+</div>
+
+        </div>
+
+        <div class="col-12">
+
+<div class="input-group">
+    <div class="input-group-text">执行</div>
+    <select itag="val" name="leader_dept"
+        class="form-select"
+        value="{{.filter.LeaderDept}}"
+        onchange="onChangeDepartment( this.value, '#filterLeader', '成员' );filter_result( 1 );"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .filter.LeaderDept) }}
+    </select>
+    <select id="filterLeader" itag="val" name="leader"
+        class="form-select"
+        value="{{.filter.Leader}}"
+        onchange="filter_result( 1 );"
+    >
+        <option value="0">成员</option>
+{{template "selection_user.html" (dict "values" .users "selected" .filter.Leader "filterId" .filter.LeaderDept) }}
+    </select>
+</div>
+
+        </div>
+
+        <div class="col-12">
+
+<div class="input-group">
+    <div class="input-group-text">验收</div>
+    <select itag="val" name="checker_dept"
+        class="form-select"
+        value="{{.filter.CheckerDept}}"
+        onchange="onChangeDepartment( this.value, '#filterChecker', '成员' );filter_result( 1 );"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .filter.CheckerDept) }}
+    </select>
+    <select id="filterChecker" itag="val" name="checker"
+        class="form-select"
+        value="{{.filter.Checker}}"
+        onchange="filter_result( 1 );"
+    >
+        <option value="0">成员</option>
+{{template "selection_user.html" (dict "values" .users "selected" .filter.Checker "filterId" .filter.CheckerDept) }}
+    </select>
+</div>
+
+        </div>
+
+        <div class="col-12">
+<div class="input-group">
+    <div class="input-group-text">品控</div>
+    <select itag="val" name="tester_dept"
+        class="form-select"
+        value="{{.filter.TesterDept}}"
+        onchange="onChangeDepartment( this.value, '#filterTester', '成员' );filter_result( 1 );"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .filter.TesterDept) }}
+    </select>
+    <select id="filterTester" itag="val" name="tester"
+        class="form-select"
+        value="{{.filter.Tester}}"
+        onchange="filter_result( 1 );"
+    >
+        <option value="0">成员</option>
+{{template "selection_user.html" (dict "values" .users "selected" .filter.Tester "filterId" .filter.TesterDept) }}
+    </select>
+</div>
+        </div>
+
+        <div class="col-12"><div class="input-group">
+
+<select  itag="val" name="caty"
+    class="form-select"
+    value="{{.filter.Caty}}"
+    onchange="filter_result( 1 );"
+>
+    <option value="0">类型</option>
+{{template "selection_map.html" (dict "values" .props.caty "selected" .filter.Caty) }}
+</select>
+
+        </div></div>
+
+        <div class="col-12"><div class="input-group">
+
+<select itag="val" name="status"
+    class="form-select"
+    value="{{.filter.Status}}"
+    onchange="filter_result( 1 );"
+>
+    <option value="0">状态</option>
+{{template "selection_map.html" (dict "values" .props.status "selected" .filter.Status) }}
+</select>
+
+        </div></div>
+
+        <div class="col-12"><div class="input-group">
+<select itag="val" name="priority"
+    class="form-select"
+    value="{{.filter.Priority}}"
+    onchange="filter_result( 1 );"
+>
+    <option value="0">优先级</option>
+{{template "selection_map.html" (dict "values" .props.priority "selected" .filter.Priority) }}
+</select>
+
+        </div></div>
+
+<div class="col-12">
+    <div class="input-group">
+        <input itag="val" name="title"
+            type="text"
+            class="form-control"
+            placeholder="标题模糊筛选"
+            value="{{$.filter.Title}}"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();filter_result(1);}"
+        />
+    </div>
+</div>
+
+<div class="col-12">
+    <button class="btn btn-primary" onclick="filter_result(1);">
+        <i class="fa-solid fa-rotate"></i> 刷新</button>
+</div>
+
+
+    </div>
+</div>
+
+
+<!-- 任务列表 -->
+<div class="container-fluid" id="task-table">
+{{template "task-list.html" . }}
+</div>
+<!-- 任务列表 结束-->
+
+<!-- 批量修改 开始-->
+<div class="container-fluid" id="batchModify">
+    <div class="row row-cols-lg-auto g-3 align-items-center">
+
+{{template "task-batch-modify.html" . }}
+
+<div class="col-12">
+    <button type="button" class="btn btn-danger" onclick="batchModify( filter_result );" >
+        <i class="fa-solid fa-screwdriver-wrench"></i> 批量修改
+    </button>
+</div>
+
+    </div>
+</div>
+<!-- 批量修改 结束-->
+
+{{template "footer.html" .}}
+
+<script type="text/javascript">
+var users = {{.users | json}};
+var tags = {{.tags | json}};
+
+setInterval( "filter_result();", 1000 * 60 * 5 );
+
+</script>
+
+
+</body></html>

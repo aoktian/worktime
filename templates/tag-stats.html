@@ -1,0 +1,45 @@
+<div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">数量统计</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+        <table class="table table-bordered table-hover table-striped text-center">
+            <thead>
+                <tr>
+                    <th scope="col" width="100">名称</th>
+                    <th scope="col" width="80">总数</th>
+{{range $key, $item := .status}}
+<th scope="col" width="80">{{$item.Name}}</th>
+{{end}}
+                    <th scope="col">进度</th>
+                </tr>
+            </thead>
+            <tbody>
+{{range $key, $item := .stats}}
+<tr>
+    <td><a href="/task/listcon?{{$item.Col}}={{$item.Id}}">{{$item.Name}}</a></td>
+    <td>{{index $item.Value 0}}</td>
+{{range $key2, $item2 := $.status}}
+    <td>{{or (index $item.Value $item2.Id) 0}}</td>
+{{end}}
+
+    <td>
+<div class="progress">
+{{$div := intDiv (index $item.Value -1) (index $item.Value 0)}}
+{{$p := percent (index $item.Value -1) (index $item.Value 0)}}
+<div class="progress-bar bg-{{if gt $div 0.8}}success{{else if gt $div 0.3}}warning{{else}}danger{{end}}" role="progressbar" style="min-width: 5em;width: {{$p}}" aria-valuenow="{{$p}}" aria-valuemin="0" aria-valuemax="100">{{$p}}</div>
+</div>
+    </td>
+</tr>
+
+{{end}}
+            </tbody>
+        </table>
+
+        </div>
+
+    </div>
+</div>

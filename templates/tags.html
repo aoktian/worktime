@@ -1,0 +1,191 @@
+{{template "header.html" .}}
+<link rel="stylesheet" href="/static/jQuery.Gantt/css/style.css?t=20251016">
+<style type="text/css">
+.fn-gantt .leftPanel {
+    width: 680px;
+}
+
+.rightPanel .fn-label {
+    width: 100%;
+}
+
+.fn-gantt .leftPanel .bg-primary
+, .fn-gantt .leftPanel .bg-secondary
+, .fn-gantt .leftPanel .bg-danger
+{
+    color: #fff;
+}
+.fn-gantt .leftPanel .desc .bg-warning {
+    color: #000;
+}
+.fn-gantt .leftPanel .desc a{
+    color: #000;
+}
+
+
+</style>
+
+</head><body>
+
+{{template "nav.html" (dict "navtab" "manage" "authUser" .authUser )}}
+
+<div class="container-fluid">
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+<li class="breadcrumb-item"><a href="/manage/projects#project-{{.project.Id}}">项目管理</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{.project.Name}}</li>
+    </ol>
+</nav>
+<hr />
+
+
+<table class="table table-bordered table-striped table-hover align-middle text-center">
+    <tbody>
+        <tr>
+<th width="50">#</th>
+<th width="200">名称</th>
+<th width="200">创建时间</th>
+<th width="200">开始时间</th>
+<th width="200">结束时间</th>
+<th scope="col" class="text-start">
+    <button class="btn btn-warning" onclick="_modify(0)">
+        <i class="fa-solid fa-plus"></i> 新增</button>
+</th>
+        </tr>
+
+{{range $key, $tag := .tags}}
+<tr id="tag-{{$tag.Id}}">
+<td>{{$tag.Id}}</td>
+<td><a href="/task/tag/{{$tag.Id}}">{{$tag.Name}}</a></td>
+<td>{{$tag.CreatedAt | unixToDay}}</td>
+<td>{{$tag.StartAt | unixToDay}}</td>
+<td>{{$tag.EndAt | unixToDay}}</td>
+
+<td class="text-start">
+    <button class="btn btn-primary" onclick="_modify({{$tag.Id}})">
+        <i class="fa-solid fa-pen-to-square"></i> 修改</button>
+    <button class="btn btn-primary ms-5" onclick="ajax('/tag/stats/{{$tag.Id}}')">
+        <i class="fa-solid fa-chart-simple"></i> 统计</button>
+    <button class="btn btn-primary ms-5" onclick="_show_gantt({{$tag.Id}})">
+        <i class="fa-solid fa-chart-gantt"></i> 甘特图</button>
+
+    <button class="btn btn-danger ms-5" onclick="_del({{$tag.Id}})">
+        <i class="fa-solid fa-trash"></i> 删除</button>
+
+</td>
+</tr>
+{{end}}
+
+<tr>
+<td scope="row" colSpan="7">
+{{pages .page "_page"}}
+</td>
+</tr>
+
+    </tbody>
+</table>
+
+
+
+</div>
+
+
+{{template "footer.html" .}}
+<script type="text/javascript">
+var _project_id = {{.project.Id}};
+function _modify(id) {
+    ajax("/tag/modify/" + id)
+}
+function _del(id) {
+    $.confirm({
+        theme: "bootstrap",
+        title: "删除版本",
+        content: "确定要删除吗？",
+        buttons: {
+            cancel: {
+                text: '取消',
+                action: function () {
+                }
+            },
+            confirm: {
+                text: '确定',
+                btnClass: 'btn-danger',
+                action: function () {
+                    var data = {}
+                    ajax("/tag/delete/" + id, data, function(r) {
+                        $("#tag-"+r.id).remove();
+                    })
+                }
+            }
+        }
+    });
+}
+function _commit() {
+    var data = getFormData("#edit-tag-form")
+    data.project_id = _project_id;
+    if (data.is_loack == "true") {
+        data.is_lock = true;
+    } else {
+        data.is_lock = false;
+    }
+
+    data.start_at = new Date(data.start_at).getTime() / 1000;
+    data.end_at = new Date(data.end_at).getTime() / 1000;
+
+    ajax("/tag/save", data, function(r) {
+        //获取当前地址，取 # 号前面的值
+        var url = window.location.href.split("#")[0];
+        window.location.href = url + "#project-"+r.id;
+        window.location.reload();
+    })
+}
+
+//翻页
+function _page(n) {
+    window.location.href = "/manage/tags/"+_project_id+"/"+n;
+}
+
+</script>
+
+<div class="modal" id="dialog-tag-gantt" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">甘特图</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body d-flex justify-content-center">
+<div class="gantt" id="tag-gantt"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button></div>
+    </div>
+</div>
+</div>
+
+
+<script src="/static/jQuery.Gantt/js/jquery.fn.gantt.js?t=20251016"></script>
+<script type="text/javascript">
+function _show_gantt(tag_id) {
+    ajax("/tag/gantt/"+tag_id, {}, function(r) {
+        $("#dialog-tag-gantt").modal('show');
+        $("#tag-gantt").gantt({
+            source: r.source,
+            months : ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
+            dow : ["日", "一", "二", "三", "四", "五", "六"],
+            itemsPerPage : 100000,
+            scale: "days",
+            minScale: "days",
+            maxScale:"months",
+            navigate: "scroll",
+            waitText: "加载中...",
+            scrollToToday: true,
+            onRender: function() {
+                $("#spacer").html("任务总数：" + r.source.length)
+            }
+        });
+    })
+}
+</script>
+
+</body></html>

@@ -1,0 +1,83 @@
+<nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img
+                class="logo"
+                src="/static/worktime.svg"
+                alt=""
+                width="50"
+                height="50"
+            />
+        </a>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+<li class="nav-item dropdown me-2">
+    <button
+        class="btn {{if eq .navtab "task"}}btn-primary{{else}}btn-dark{{end}} btn-lg dropdown-toggle"
+        href="#"
+        role="button"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+    >
+        任务管理
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="/task/ilist">我的任务</a></li>
+        <li><a class="dropdown-item" href="/task/listcon?author={{.authUser.Id}}">我发布的</a></li>
+        <hr />
+        <li><a class="dropdown-item" href="/task/icheck">我要验收</a></li>
+        <li><a class="dropdown-item" href="/task/itest">我要测试</a></li>
+        <hr />
+        <li><a class="dropdown-item" href="/task/list">全部任务</a></li>
+    </ul>
+</li>
+
+<li class="nav-item dropdown me-2">
+    <button
+        class="btn {{if eq .navtab "manage"}}btn-primary{{else}}btn-dark{{end}} btn-lg dropdown-toggle"
+        href="#"
+        role="button"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+    >
+        管理中心
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="/manage/projects">项目管理</a></li>
+        <hr />
+        <li><a class="dropdown-item" href="/manage/users">成员管理</a></li>
+    </ul>
+</li>
+
+<li class="nav-item dropdown me-2">
+    <button
+        class="btn {{if eq .navtab "help"}}btn-primary{{else}}btn-dark{{end}} btn-lg dropdown-toggle"
+        href="#"
+        role="button"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+    >
+        帮助
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="/help/usage">如何使用我</a></li>
+        <li><a class="dropdown-item" href="/help/bug">有效提交BUG</a></li>
+        <li><a class="dropdown-item" href="/help/manage">高效管理任务</a></li>
+    </ul>
+</li>
+
+<li class="nav-item">
+    <a class="btn btn-warning btn-lg" href="/task/new/0" target="_blank">发布任务</a>
+</li>
+            </ul>
+            <div class="d-flex align-items-center fs-3 pe-3">
+                <i class="fa-solid fa-user"></i><span id="iname">{{.authUser.Name}}</span>
+                <a href="/auth/logout" class="btn btn-link ms-3">退出</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<hr />

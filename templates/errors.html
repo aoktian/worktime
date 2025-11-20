@@ -1,0 +1,18 @@
+{{template "header.html" .}}</head><body>
+
+
+<div class="container">
+
+{{range $index, $error := .errors}}
+<div class="card mb-3">
+    <div class="card-body">
+        {{$error | html}}
+        <div><a href="javascript:history.back(-1);">点击返回</a></div>
+    </div>
+</div>
+{{end}}
+
+</div>
+
+
+{{template "footer.html" .}}</body></html>

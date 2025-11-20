@@ -1,0 +1,3 @@
+{{range $key, $value := .values}}
+    <option value="{{$value.Id}}" {{if eq $value.Id $.selected}}selected{{end}}>{{$value.Name}}</option>
+{{end}}

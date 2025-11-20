@@ -1,0 +1,46 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">编辑用户</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="user-edit-form">
+<input type="hidden" name="id" value="{{.user.Id}}" />
+
+<div class="mb-3">
+    <label class="form-label">帐号</label>
+    <input name="account" value="{{.user.Account}}" class="form-control" type="text"  />
+</div>
+<div class="mb-3">
+    <label class="form-label">密码</label>
+    <input name="password" class="form-control" type="text"  />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">名称</label>
+    <input name="name" value="{{.user.Name}}" class="form-control" type="text"  />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">部门</label>
+    <select itag="val" name="department"
+        class="form-select"
+        value="{{.user.Department}}"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .departments "selected" .user.Department) }}
+    </select>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">分组</label>
+    <input name="team" value="{{.user.Team}}" class="form-control" type="text"  />
+</div>
+
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            <button onclick="_commit()" type="button" class="btn btn-primary">保存</button>
+        </div>
+    </div>
+</div>

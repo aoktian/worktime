@@ -1,0 +1,28 @@
+
+
+<form method="GET" action="https://accounts.feishu.cn/open-apis/authen/v1/authorize">
+    <input
+        name="client_id"
+        type="hidden"
+        value="{{.feishu.ClientID}}"
+    />
+    <input
+        name="redirect_uri"
+        type="hidden"
+        value="{{.feishu.RedirectURI}}"
+    />
+    <input
+        name="state"
+        type="hidden"
+        value="{{.rCode}}"
+    />
+
+    <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">
+            飞书授权登录
+        </button>
+    </div>
+
+</form>
+
+

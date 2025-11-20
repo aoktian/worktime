@@ -1,0 +1,65 @@
+{{template "header.html" .}}</head><body>
+
+<div class="container">
+    <div class='text-center'>
+    <img src="/static/worktime.svg" class="logo mb-5" width="350" height="350" />
+    </div>
+
+    <div class="card">
+
+    <div class="card-header">
+        <h1>
+            WORKTIME
+        </h1>
+    </div>
+    <div class="card-body">
+            <h2 class="card-title">简单、好用、高效</h2>
+            <p class="card-text">
+                广泛使用、备受好评的项目管理和问题跟踪工具，提供可定制的工作流程和广泛的集成能力。
+            </p>
+            <hr />
+
+
+{{if eq .feishu.ClientID ""}}
+
+<form id="loginForm" method="post" action="/auth/login" onsubmit="return false;">
+    <div class="mb-3">
+        <label class="form-label">
+            账号
+        </label>
+        <input
+            name="account"
+            type="text"
+            class="form-control"
+            required
+        />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">
+            密码
+        </label>
+        <input
+            name="password"
+            type="password"
+            class="form-control"
+            required
+        />
+    </div>
+
+    <div class="d-grid gap-2">
+        <button type="button" class="btn btn-primary btn-lg" onclick="submitFormAjax('#loginForm');">
+            登 入
+        </button>
+    </div>
+
+</form>
+{{else}}
+{{template "login_feishu.html" .}}
+{{end}}
+
+    </div>
+    </div>
+</div>
+
+{{template "footer.html" .}}</body></html>

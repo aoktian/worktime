@@ -1,0 +1,43 @@
+<div class="modal-dialog modal-xl">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">#{{.task.Id}} {{.task.Title}}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <table class="table table-striped table-bordered mt-3 text-center">
+<thead class="table-light">
+<tr>
+<th scope="col" width="50">
+ID
+</th>
+<th scope="col" width="100">时间</th>
+<th scope="col" width="100">操作人</th>
+<th scope="col" width="80">属性</th>
+<th scope="col" width="100">修改前</th>
+<th scope="col" width="100">修改后</th>
+</tr>
+</thead>
+<tbody>
+{{range $index, $log := .logs}}
+<tr>
+<td>{{$log.Id}}</td>
+<td>{{$log.CreatedAt | formatDate}}</td>
+<td>{{$log.Operator}}</td>
+<td>{{$log.Col}}</td>
+{{if eq $log.Col "内容"}}
+<td colspan="2">
+    <a href="/task/logdiff/{{$log.Id}}" target="_blank" class='btn btn-link' >点击查看</a>
+</td>
+{{else}}
+<td>{{$log.Value}}</td>
+<td>{{$log.ValueTo}}</td>
+{{end}}
+</tr>
+{{end}}
+
+</tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,88 @@
+{{template "header.html" .}}</head><body>
+{{template "nav.html" (dict "navtab" "manage" "authUser" .authUser )}}
+
+<div class="container-fluid">
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page">成员管理</li>
+    </ol>
+</nav>
+<hr />
+
+
+<table class="table table-bordered table-striped table-hover align-middle text-center">
+    <tbody>
+        <tr>
+<th scope="col" width="50">#</th>
+<th scope="col" width="100">帐号</th>
+<th scope="col" width="200">名称</th>
+<th scope="col" width="100">部门</th>
+<th scope="col" width="100">分组</th>
+{{if .authUser.IsAdmin}}
+    <th scope="col" class="text-start">
+        <button class="btn btn-warning" onclick="_modify(0)">
+            <i class="fa-solid fa-plus"></i> 新增</button>
+    </th>
+{{end}}
+        </tr>
+
+{{range $key, $user := .users}}
+<tr id="user-{{$user.Id}}">
+<td>{{$user.Id}}</td>
+<td>{{$user.Account}}</td>
+<td>
+    {{$user.Name}}{{if $user.IsAdmin}}
+    <span class="badge text-bg-primary">管理员</span>{{end}}
+</td>
+<td>{{(index $.departments $user.Department).Name}}</td>
+<td>{{$user.Team}}</td>
+{{if $.authUser.IsAdmin}}
+    <td class="text-start">
+        <button class="btn btn-primary" onclick="_modify({{$user.Id}})">
+            <i class="fa-solid fa-pen-to-square"></i> 修改</button>
+        <button class="btn btn-danger ms-5" onclick="_del({{$user.Id}})">
+            <i class="fa-solid fa-trash"></i> 删除</button>
+    </td>
+{{end}}
+
+</tr>
+{{end}}
+    </tbody>
+</table>
+
+
+
+</div>
+
+
+{{template "footer.html" .}}
+<script type="text/javascript">
+function _modify(id) {
+    ajax("/user/modify/" + id)
+}
+function _del(id) {
+    if (!confirm("确定要删除吗？")) {
+        return;
+    }
+    ajax("/user/deleteform/" + id)
+}
+function _commit() {
+    var data = getFormData("#user-edit-form")
+    ajax("/user/save", data, function(r) {
+        window.location.href = "/manage/users#user-"+r.id;
+        window.location.reload();
+    })
+}
+function _deleteUser() {
+    var data = getFormData("#delete-user-form")
+    ajax("/user/delete", data, function(r) {
+        $("#user-"+r.id).remove();
+        $("#dialog").modal("hide");
+        showSuccessToast("删除成功")
+    })
+}
+</script>
+
+
+</body></html>

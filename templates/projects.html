@@ -1,0 +1,90 @@
+{{template "header.html" .}}</head><body>
+{{template "nav.html" (dict "navtab" "manage" "authUser" .authUser )}}
+
+<div class="container-fluid">
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page">项目管理</li>
+    </ol>
+</nav>
+<hr />
+
+
+<table class="table table-bordered table-striped table-hover align-middle text-center">
+    <tbody>
+        <tr>
+<th scope="col" width="50">#</th>
+<th scope="col" width="200">名称</th>
+<th scope="col" width="200">创建时间</th>
+<th scope="col" class="text-start">
+    <button class="btn btn-warning" onclick="_modify(0)">
+        <i class="fa-solid fa-plus"></i> 新增</button>
+</th>
+        </tr>
+
+{{range $key, $project := .projects}}
+<tr id="project-{{$project.Id}}">
+<td>{{$project.Id}}</td>
+<td><a href="/task/project/{{$project.Id}}">{{$project.Name}}</a></td>
+<td>{{$project.CreatedAt | formatDate}}</td>
+<td class="text-start">
+    <button class="btn btn-primary" onclick="_modify({{$project.Id}})">
+        <i class="fa-solid fa-pen-to-square"></i> 修改</button>
+
+    <a class="btn btn-primary ms-5" href="/manage/tag/{{$project.Id}}/1">
+        <i class="fa-solid fa-list"></i> 管理版本</a>
+
+    <button class="btn btn-danger ms-5" onclick="_del({{$project.Id}})">
+        <i class="fa-solid fa-trash"></i> 删除
+    </button>
+</td>
+</tr>
+{{end}}
+    </tbody>
+</table>
+
+
+
+</div>
+
+
+{{template "footer.html" .}}
+<script type="text/javascript">
+function _modify(id) {
+    ajax("/project/modify/" + id)
+}
+function _del(id) {
+    $.confirm({
+        theme: "bootstrap",
+        title: "删除项目",
+        content: "确定要删除吗？",
+        buttons: {
+            cancel: {
+                text: '取消',
+                action: function () {
+                }
+            },
+            confirm: {
+                text: '确定',
+                btnClass: 'btn-danger',
+                action: function () {
+                    var data = {}
+                    ajax("/project/delete/" + id, data, function(r) {
+                        $("#project-"+r.id).remove();
+                    })
+                }
+            }
+        }
+    });
+}
+function _commit() {
+    var data = getFormData("#edit-project-form")
+    ajax("/project/save", data, function(r) {
+        window.location.href = "/manage/projects#project-"+r.id;
+        window.location.reload();
+    })
+}
+
+</script>
+</body></html>

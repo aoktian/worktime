@@ -1,0 +1,45 @@
+<div class="modal-dialog modal-xxl">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">删除用户 {{.user.Name}}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="delete-user-form">
+<input type="hidden" name="id" value="{{.user.Id}}" />
+
+        <p class="card-text">选择接收人，将删除的用户的单子转移给接收人</p>
+
+<div class="mb-3">
+    <label class="form-label">部门</label>
+    <select
+        class="form-select"
+        value="{{.user.Department}}"
+        onchange="onChangeDepartment( this.value, '#reciver-select', '成员' );"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .departments "selected" 0) }}
+    </select>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">成员</label>
+<select id="reciver-select"
+class="form-select"
+itag="val" name="reciver"
+>
+<option value="0">成员</option>
+</select>
+
+</div>
+
+
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            <button onclick="_deleteUser()" type="button" class="btn btn-danger">提交</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+var users = {{.users | json}};
+</script>

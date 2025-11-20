@@ -1,0 +1,24 @@
+server:
+  domain:"http://127.0.0.1:8080"
+  upload_dir: "upload" # 上传图片的目录，保存到服务器上的位置
+  imgurl: "/upload/" # 上传图片的url。可以是绝对路径，也可以是相对路径。
+  port: 8080
+  GIN_MODE: debug
+  # GIN_MODE: release
+
+jwt:
+  expires_in: 8760 #  1年 小时
+  secret: "wP3-sN6&gG4-lV8>gJ9)"
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  dbname: worktime
+  pwd: 123456
+  show_sql: false
+
+feishu:
+  client_id : ""
+  client_secret : ""
+  redirect_uri : ""
