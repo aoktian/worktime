@@ -100,8 +100,10 @@ function getFormData(formSelector) {
 
         let value = $el.val();
         // 类型转换：如果是数字字符串则转换为数字
-        if (value !== "" && !isNaN(value) && !isNaN(parseFloat(value))) {
-            value = Number(value);
+        if (type != "password") {
+            if (value !== "" && !isNaN(value) && !isNaN(parseFloat(value))) {
+                value = Number(value);
+            }
         }
 
         // 处理不同类型的表单元素
