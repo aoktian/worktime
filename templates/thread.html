@@ -13,6 +13,9 @@
 
 <div class="container-fluid" id="related-tasks">
 <!-- 关联任务 -->
+{{if gt (len .tasks) 1}}
+{{template "task-related.html" .}}
+{{end}}
 </div>
 
 <div class="container-fluid">
@@ -310,7 +313,6 @@ var task = {{.task | json}};
 
 $(document).ready(function() {
     initEditor("#new-comment-editor");
-    _set_related();
 });
 
 

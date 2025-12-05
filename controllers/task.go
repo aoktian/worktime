@@ -191,7 +191,7 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 	offset := pagination.GetOffset()
 
 	result := make([]*models.Task, 0)
-	err = models.DB.Where(sqlWhere, args...).OrderBy("status, priority desc, level desc, id").Limit(TaskListPageSize, offset).Find(&result)
+	err = models.DB.Where(sqlWhere, args...).OrderBy("status, priority desc, level desc, id desc").Limit(TaskListPageSize, offset).Find(&result)
 	if err != nil {
 		Error(ctx, err)
 		return
@@ -281,7 +281,7 @@ func (x *Task) Get(ctx *gin.Context) {
 	}
 
 	result := make([]*models.Task, 0)
-	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid").Find(&result)
+	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&result)
 	if err != nil {
 		JSONError(ctx, err)
 		return
@@ -290,6 +290,7 @@ func (x *Task) Get(ctx *gin.Context) {
 	templateData := ctx.MustGet("templateData").(map[string]any)
 	templateData["task"] = task
 	templateData["tasks"] = result
+	templateData["pagination"] = &Pagination{Page: 1, Total: len(result), Size: 10000}
 
 	x.addCommonData(templateData)
 
@@ -400,7 +401,7 @@ func (x *Task) Related(ctx *gin.Context) {
 	}
 
 	tasks := make([]*models.Task, 0)
-	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid").Find(&tasks)
+	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&tasks)
 	if err != nil {
 		JSONError(ctx, err)
 		return

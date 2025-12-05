@@ -279,13 +279,13 @@ func (x *User) Delete(ctx *gin.Context) {
 		return
 	}
 
-	_, err = session.Exec("UPDATE feed SET author = ? WHERE author = ?", receiver.Id, user.Id)
+	_, err = session.Exec("UPDATE comment SET author = ? WHERE author = ?", receiver.Id, user.Id)
 	if err != nil {
 		session.Rollback()
 		JSONError(ctx, err)
 		return
 	}
-	_, err = session.Exec("UPDATE feed SET editor = ? WHERE editor = ?", receiver.Id, user.Id)
+	_, err = session.Exec("UPDATE comment SET editor = ? WHERE editor = ?", receiver.Id, user.Id)
 	if err != nil {
 		session.Rollback()
 		JSONError(ctx, err)
