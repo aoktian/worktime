@@ -35,7 +35,7 @@ function handleResponse(r) {
     if (r.errors) {
         $.alert({
             title: '提示信息',
-            content: r.errors.join('<p></p>'),
+            content: r.errors.map(error => `<p>${error}</p>`).join(''),
             type: 'red',
         });
         return false;
