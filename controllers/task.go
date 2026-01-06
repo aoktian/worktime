@@ -47,7 +47,18 @@ func (x *Task) URLPatterns() []Route {
 
 type listForm struct {
 	models.Task
-	Page int `json:"page"`
+	Page    int    `json:"page"`
+	OrderBy string `json:"order_by"`
+}
+
+func (x *listForm) getOrderBy() string {
+	switch x.OrderBy {
+	case "default":
+		return "status, priority desc, level desc, id desc"
+	case "created_at":
+		return "id desc"
+	}
+	return "status, priority desc, level desc, id desc"
 }
 
 const (
@@ -191,7 +202,7 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 	offset := pagination.GetOffset()
 
 	result := make([]*models.Task, 0)
-	err = models.DB.Where(sqlWhere, args...).OrderBy("status, priority desc, level desc, id desc").Limit(TaskListPageSize, offset).Find(&result)
+	err = models.DB.Where(sqlWhere, args...).OrderBy(con.getOrderBy()).Limit(TaskListPageSize, offset).Find(&result)
 	if err != nil {
 		Error(ctx, err)
 		return

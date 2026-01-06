@@ -286,6 +286,9 @@ function _save() {
     if (data.priority == 0) {
         return showErrorToast("请选择优先级")
     }
+    if (data.status == 0) {
+        return showErrorToast("请选择状态")
+    }
 
     ajax("/task/save", data, function(r) {
         window.location.href = "/task/thread/" + r.id;
