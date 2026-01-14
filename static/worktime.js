@@ -294,10 +294,20 @@ function onChangeDepartment( id, tar, first ) {
 
 function getTags( id ) {
     var options = "";
+    var ordered = [];
     for (var i in tags) {
         if (tags[i].project_id == id) {
-        options += "<option value='" + tags[i].id + "'>" + tags[i].name + "</option>";
+            ordered.push(tags[i]);
         }
+    }
+    ordered.sort(function(a, b) {
+        if (a.paixu !== b.paixu) {
+            return b.paixu - a.paixu; // paixu 从大到小
+        }
+        return a.id - b.id; // paixu 相同时 id 从小到大
+    });
+    for (var i = 0; i < ordered.length; i++) {
+        options += "<option value='" + ordered[i].id + "'>" + ordered[i].name + "</option>";
     }
     return options;
 }

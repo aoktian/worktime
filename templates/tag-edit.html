@@ -16,6 +16,14 @@
 </div>
 
 <div class="mb-2">
+    <label class="form-label">排序</label>
+    <input class="form-control" type="number"
+        value="{{.tag.Paixu}}"
+        name="paixu"
+    />
+</div>
+
+<div class="mb-2">
     <label class="form-label">开始时间</label>
     <input class="form-control" type="date"
         value="{{.tag.StartAt | unixToDay}}"

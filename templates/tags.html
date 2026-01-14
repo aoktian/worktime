@@ -45,6 +45,7 @@
         <tr>
 <th width="50">#</th>
 <th width="200">名称</th>
+<th width="50">排序</th>
 <th width="200">创建时间</th>
 <th width="200">开始时间</th>
 <th width="200">结束时间</th>
@@ -58,6 +59,7 @@
 <tr id="tag-{{$tag.Id}}">
 <td>{{$tag.Id}}</td>
 <td><a href="/task/tag/{{$tag.Id}}">{{$tag.Name}}</a></td>
+<td>{{$tag.Paixu}}</td>
 <td>{{$tag.CreatedAt | unixToDay}}</td>
 <td>{{$tag.StartAt | unixToDay}}</td>
 <td>{{$tag.EndAt | unixToDay}}</td>

@@ -27,6 +27,7 @@ func (x *Task) URLPatterns() []Route {
 		{Method: http.MethodGet, Path: "/task/listcon", ResourceFunc: x.ListCon},
 
 		{Method: http.MethodGet, Path: "/task/project/:id", ResourceFunc: x.Project},
+		{Method: http.MethodGet, Path: "/task/tag/:id", ResourceFunc: x.Tag},
 
 		{Method: http.MethodPost, Path: "/task/list", ResourceFunc: x.List},
 		{Method: http.MethodGet, Path: "/task/thread/:id", ResourceFunc: x.Get},
@@ -53,12 +54,13 @@ type listForm struct {
 
 func (x *listForm) getOrderBy() string {
 	switch x.OrderBy {
-	case "default":
-		return "status, priority desc, level desc, id desc"
 	case "created_at":
-		return "id desc"
+		return "task.id desc"
+	case "tag":
+		return "tag.paixu desc, status, priority desc, level desc, task.id desc"
+	default:
+		return "status, priority desc, level desc, task.id desc"
 	}
-	return "status, priority desc, level desc, id desc"
 }
 
 const (
@@ -67,8 +69,9 @@ const (
 
 func (x *Task) All(ctx *gin.Context) {
 	con := &listForm{
-		Page: 1,
-		Task: models.Task{},
+		Page:    1,
+		Task:    models.Task{},
+		OrderBy: "tag",
 	}
 	x.list(ctx, con)
 }
@@ -109,6 +112,21 @@ func (x *Task) Itest(ctx *gin.Context) {
 	x.list(ctx, con)
 }
 
+func (x *Task) Tag(ctx *gin.Context) {
+	id := GetParamInt(ctx, "id")
+
+	tag := &models.Tag{}
+	models.DB.Id(id).Get(tag)
+	con := &listForm{
+		Page: 1,
+		Task: models.Task{
+			Tag:     tag.Id,
+			Project: tag.ProjectId,
+		},
+	}
+	x.list(ctx, con)
+}
+
 func (x *Task) Project(ctx *gin.Context) {
 	id := GetParamInt(ctx, "id")
 	con := &listForm{
@@ -135,7 +153,9 @@ func (x *Task) ListCon(ctx *gin.Context) {
 }
 
 func (x *Task) List(ctx *gin.Context) {
-	con := &listForm{}
+	con := &listForm{
+		OrderBy: "tag",
+	}
 	if !ShouldBindJSON(ctx, con) {
 		return
 	}
@@ -202,7 +222,9 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 	offset := pagination.GetOffset()
 
 	result := make([]*models.Task, 0)
-	err = models.DB.Where(sqlWhere, args...).OrderBy(con.getOrderBy()).Limit(TaskListPageSize, offset).Find(&result)
+	err = models.DB.Table("task").
+		Join("LEFT", "tag", "task.tag = tag.id").
+		Where(sqlWhere, args...).OrderBy(con.getOrderBy()).Limit(TaskListPageSize, offset).Find(&result)
 	if err != nil {
 		Error(ctx, err)
 		return
@@ -264,6 +286,10 @@ func (x *Task) NewTask(ctx *gin.Context) {
 	templateData := ctx.MustGet("templateData").(map[string]any)
 	templateData["task"] = task
 
+	orderedTags := make([]*models.Tag, 0)
+	models.DB.OrderBy("paixu desc").Find(&orderedTags)
+	templateData["orderedTags"] = orderedTags
+
 	x.addCommonData(templateData)
 
 	HTML(ctx, "task-add.html", nil)
@@ -302,6 +328,10 @@ func (x *Task) Get(ctx *gin.Context) {
 	templateData["task"] = task
 	templateData["tasks"] = result
 	templateData["pagination"] = &Pagination{Page: 1, Total: len(result), Size: 10000}
+
+	orderedTags := make([]*models.Tag, 0)
+	models.DB.OrderBy("paixu desc").Find(&orderedTags)
+	templateData["orderedTags"] = orderedTags
 
 	x.addCommonData(templateData)
 

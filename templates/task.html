@@ -1,4 +1,14 @@
-{{template "header.html" .}}</head><body>
+{{template "header.html" .}}
+<style type="text/css">
+.limited-text {
+    max-width: 300px !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+</style>
+
+</head><body>
 {{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
 
 <div class="container-fluid" id="taskfilter">
@@ -149,11 +159,11 @@
 <div class="col-12"><div class="input-group">
 <select itag="val" name="order_by"
     class="form-select"
-    value="{{.filter.OrderBy}}"
     onchange="filter_result( 1 );"
 >
-    <option value="default">默认排序</option>
-    <option value="created_at">创建时间</option>
+    <option value="default">状态优先</option>
+    <option value="created_at" {{if eq .filter.OrderBy "created_at"}}selected{{end}}>创建时间</option>
+    <option value="tag" {{if eq .filter.OrderBy "tag"}}selected{{end}}>版本优先</option>
 </select>
 
 </div></div>

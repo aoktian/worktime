@@ -107,7 +107,7 @@
         class="form-select"
         value="{{.task.Tag}}"
     >
-{{template "selection_tag.html" (dict "values" .tags "selected" .task.Tag "filterId" .task.Project) }}
+{{template "selection_tag.html" (dict "values" .orderedTags "selected" .task.Tag "filterId" .task.Project) }}
     </select>
 </div>
 
@@ -205,6 +205,7 @@
 </select>
 <input type="text" class="form-control" itag="val" name="level" value="{{.task.Level}}" />
 
+
 </div></div>
 
 <div class="col-12">
@@ -267,7 +268,8 @@
 <textarea id="new-comment-editor" name="content"></textarea>
 <div class="mt-3"></div>
 <div class="d-grid">
-<button type="button" class="btn btn-danger btn-lg" onclick="_commit_new_comment('#new-comment-form', '#new-comment-editor')"> 提交反馈 </button>
+<button type="button" class="btn btn-danger btn-lg" onclick="_commit_new_comment('#new-comment-form', '#new-comment-editor')">
+    <i class="fa-solid fa-floppy-disk"></i> 提交反馈 </button>
 </div>
 
 
@@ -327,13 +329,18 @@ function _related_to() {
 function _commit_new_comment( formid, editorid ) {
     var c = $(editorid).summernote( 'code' );
 
+    if (c == '') {
+        showErrorToast('请输入反馈内容')
+        return;
+    }
+
     if (c.indexOf("data:image/png;base64") >= 0) {
-        alert('不正确的图片格式，不要从word、有道等软件中直接粘贴过来，建议使用ctl+shift+v');
+        showErrorToast('不正确的图片格式，不要从word、有道等软件中直接粘贴过来，建议使用ctl+shift+v');
         return false;
     }
 
     if (c.indexOf('yne-bulb-block') >= 0) {
-        alert('不要从word、有道等软件中直接粘贴过来，使用ctl+shift+v')
+        showErrorToast('不要从word、有道等软件中直接粘贴过来，使用ctl+shift+v')
         return false;
     }
 
@@ -356,6 +363,7 @@ function _set_related() {
     ajax("/task/related/{{.task.Id}}")
 }
 
+
 var _status_modify_task = false
 function _modify_task() {
     if (_status_modify_task) {
@@ -366,6 +374,7 @@ function _modify_task() {
     $('.edit-buttons').toggle();
     _status_modify_task = !_status_modify_task;
 }
+
 
 function _fast_modify() {
     var jsonData = getFormData("#task-modify-form");
@@ -397,6 +406,7 @@ function _fast_modify() {
 
     ajax("/task/save", jsonData, function(r) {
         showSuccessToast('保存成功')
+
         if (_status_modify_task) {
             _modify_task()//关闭编辑
         }
@@ -412,7 +422,6 @@ function _fast_modify() {
         $('#task-last-modify').html(`修改：${iname} (${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()})`)
     })
 }
-
 
 var _modify_comment_id = 0
 function _modify_comment(id) {
@@ -441,13 +450,18 @@ function _modify_comment(id) {
 function _commit_comment(id) {
     var c = $('#comment-content-' + id).summernote( 'code' );
 
+    if (c == '') {
+        showErrorToast('请输入反馈内容')
+        return;
+    }
+
     if (c.indexOf("data:image/png;base64") >= 0) {
-        alert('不正确的图片格式，不要从word、有道等软件中直接粘贴过来，建议使用ctl+shift+v');
+        showErrorToast('不正确的图片格式，不要从word、有道等软件中直接粘贴过来，建议使用ctl+shift+v')
         return ;
     }
 
     if (c.indexOf('yne-bulb-block') >= 0) {
-        alert('不要从word、有道等软件中直接粘贴过来，使用ctl+shift+v')
+        showErrorToast('不要从word、有道等软件中直接粘贴过来，使用ctl+shift+v')
         return ;
     }
 
@@ -464,7 +478,6 @@ function _commit_comment(id) {
         $('#comment-last-modify-'+id).html(`修改：${iname} (${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()})`)
     })
 }
-
 </script>
 
 

@@ -50,7 +50,7 @@ func (x *Tag) InProject(ctx *gin.Context) {
 	pagination.Total = int(total)
 
 	results := make([]*models.Tag, 0)
-	sql := "select * from tag where project_id = ? order by id desc limit ? offset ?"
+	sql := "select * from tag where project_id = ? order by paixu desc, id desc limit ? offset ?"
 	err = models.DB.SQL(sql, project_id, pagination.Size, pagination.GetOffset()).Find(&results)
 	if err != nil {
 		JSONError(ctx, err)
