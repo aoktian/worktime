@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"webserver/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,13 +10,13 @@ import (
 type Help struct {
 }
 
-func (it *Help) URLPatterns() []Route {
-	return []Route{
+func (it *Help) URLPatterns() []utils.Route {
+	return []utils.Route{
 		{Method: http.MethodGet, Path: "/help/:page", ResourceFunc: it.Index},
 	}
 }
 
 func (it *Help) Index(ctx *gin.Context) {
 	page := ctx.Param("page")
-	HTML(ctx, "help_"+page+".html", nil)
+	utils.HTML(ctx, "help_"+page+".html", nil)
 }

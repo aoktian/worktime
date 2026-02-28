@@ -48,8 +48,8 @@ type FeishuUserInfoResponse struct {
 
 type FeishuAuth struct{}
 
-func (x *FeishuAuth) URLPatterns() []Route {
-	return []Route{
+func (x *FeishuAuth) URLPatterns() []utils.Route {
+	return []utils.Route{
 		{Method: http.MethodGet, Path: "/flogin", ResourceFunc: x.Login},
 	}
 }
@@ -59,12 +59,12 @@ func (it *FeishuAuth) Login(c *gin.Context) {
 	errorStr := c.Query("error")
 
 	if errorStr != "" {
-		ErrorMsg(c, errorStr)
+		utils.ErrorMsg(c, errorStr)
 		return
 	}
 
 	if code == "" {
-		ErrorMsg(c, "no code")
+		utils.ErrorMsg(c, "no code")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (it *FeishuAuth) Login(c *gin.Context) {
 	// 创建请求
 	req, err := http.NewRequestWithContext(context.Background(), "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		ErrorMsg(c, fmt.Sprintf("failed to create request: %v", err))
+		utils.ErrorMsg(c, fmt.Sprintf("failed to create request: %v", err))
 		return
 	}
 
@@ -94,19 +94,19 @@ func (it *FeishuAuth) Login(c *gin.Context) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		ErrorMsg(c, fmt.Sprintf("Curl error: %v", err))
+		utils.ErrorMsg(c, fmt.Sprintf("Curl error: %v", err))
 		return
 	}
 	defer resp.Body.Close()
 
 	var tokenResp FeishuTokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		ErrorMsg(c, fmt.Sprintf("failed to decode response: %v", err))
+		utils.ErrorMsg(c, fmt.Sprintf("failed to decode response: %v", err))
 		return
 	}
 
 	if tokenResp.Code != 0 {
-		ErrorMsg(c, fmt.Sprintf("token response error: %s", resp.Body))
+		utils.ErrorMsg(c, fmt.Sprintf("token response error: %s", resp.Body))
 		return
 	}
 
@@ -114,7 +114,7 @@ func (it *FeishuAuth) Login(c *gin.Context) {
 	userInfoURL := "https://open.feishu.cn/open-apis/authen/v1/user_info"
 	userInfoReq, err := http.NewRequestWithContext(context.Background(), "GET", userInfoURL, nil)
 	if err != nil {
-		ErrorMsg(c, fmt.Sprintf("failed to create user info request: %v", err))
+		utils.ErrorMsg(c, fmt.Sprintf("failed to create user info request: %v", err))
 		return
 	}
 
@@ -123,26 +123,26 @@ func (it *FeishuAuth) Login(c *gin.Context) {
 
 	userInfoResp, err := client.Do(userInfoReq)
 	if err != nil {
-		ErrorMsg(c, fmt.Sprintf("Curl error: %v", err))
+		utils.ErrorMsg(c, fmt.Sprintf("Curl error: %v", err))
 		return
 	}
 	defer userInfoResp.Body.Close()
 
 	var userInfo FeishuUserInfoResponse
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
-		ErrorMsg(c, fmt.Sprintf("failed to decode user info: %v", err))
+		utils.ErrorMsg(c, fmt.Sprintf("failed to decode user info: %v", err))
 		return
 	}
 
 	if userInfo.Code != 0 {
-		ErrorMsg(c, fmt.Sprintf("user info error: %s", userInfo.Msg))
+		utils.ErrorMsg(c, fmt.Sprintf("user info error: %s", userInfo.Msg))
 		return
 	}
 
 	// 检查用户并设置 session
 	user, err := it.checkUser(userInfo.Data)
 	if err != nil {
-		ErrorMsg(c, fmt.Sprintf("failed to check user: %v", err))
+		utils.ErrorMsg(c, fmt.Sprintf("failed to check user: %v", err))
 		return
 	}
 

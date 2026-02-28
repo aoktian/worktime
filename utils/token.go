@@ -10,11 +10,11 @@ import (
 
 // 自定义 Claims 结构体
 type CustomClaims struct {
-	UserID int `json:"user_id"`
+	UserID int64 `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID int) (string, error) {
+func GenerateToken(userID int64) (string, error) {
 	tokenLifespan := AppConfig.Jwt.ExpiresIn
 
 	claims := CustomClaims{

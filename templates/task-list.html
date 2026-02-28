@@ -4,15 +4,16 @@
         <th scope="col" width="50">
             <input class="form-check-input" type="checkbox" onclick="checkall('tasklist', 'task-checkbox', $(this).prop('checked') );" />
         </th>
-        <th scope="col" width="150">项目</th>
-        <th scope="col">版本</th>
+        <th scope="col" width="120">项目</th>
+        <th scope="col" width="120">版本</th>
         <th scope="col" width="80">状态</th>
         <th scope="col" width="100">等级</th>
         <th scope="col" width="80">类型</th>
         <th scope="col" class='text-start'>标题</th>
-        <th scope="col" width="150">负责人</th>
-        <th scope="col" width="150">验收人</th>
-        <th scope="col" width="150">品控</th>
+        <th scope="col" width="120">负责人</th>
+        <th scope="col" width="120">验收人</th>
+        <th scope="col" width="120">品控</th>
+        <th scope="col" width="120">作者</th>
         <th scope="col" width="200">创建</th>
     </tr>
 </thead>
@@ -39,6 +40,7 @@
     <td>{{(index $.users $value.Leader).Name}}</td>
     <td>{{(index $.users $value.Checker).Name}}</td>
     <td>{{(index $.users $value.Tester).Name}}</td>
+    <td>{{(index $.users $value.Author).Name}}</td>
     <td>{{$value.CreatedAt | formatDate}}</td>
 </tr>
 {{end}}

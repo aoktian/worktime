@@ -44,9 +44,6 @@ func help() {
 func main() {
 	utils.InitConf()
 
-	props := models.Props{}
-	props.InitFromConf()
-
 	models.ConnectDatabase()
 
 	cmdindex := ""
@@ -216,7 +213,7 @@ func startWebServer() {
 			"stack":  string(debug.Stack()),
 		}).Errorf("Panic recovered: %v", recovered)
 
-		controllers.ErrorMsg(c, fmt.Sprintf("%v", recovered))
+		utils.ErrorMsg(c, fmt.Sprintf("%v", recovered))
 		c.Abort()
 	}))
 
@@ -269,7 +266,7 @@ func startWebServer() {
 	r.Run("0.0.0.0:" + utils.AppConfig.Server.Port)
 }
 
-func register(group *gin.RouterGroup, router controllers.Router) {
+func register(group *gin.RouterGroup, router utils.Router) {
 	for _, route := range router.URLPatterns() {
 		group.Handle(route.Method, route.Path, route.ResourceFunc)
 	}

@@ -3,14 +3,15 @@ package controllers
 import (
 	"net/http"
 	"webserver/models"
+	"webserver/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Props struct{}
 
-func (x *Props) URLPatterns() []Route {
-	return []Route{
+func (x *Props) URLPatterns() []utils.Route {
+	return []utils.Route{
 		{Method: http.MethodGet, Path: "/props/caty", ResourceFunc: x.Caty},
 		{Method: http.MethodGet, Path: "/props/status", ResourceFunc: x.Status},
 		{Method: http.MethodGet, Path: "/props/priority", ResourceFunc: x.Priority},

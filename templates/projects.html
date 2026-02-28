@@ -1,5 +1,5 @@
 {{template "header.html" .}}</head><body>
-{{template "nav.html" (dict "navtab" "manage" "authUser" .authUser )}}
+{{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
 
 <div class="container-fluid">
 
@@ -32,7 +32,7 @@
     <button class="btn btn-primary" onclick="_modify({{$project.Id}})">
         <i class="fa-solid fa-pen-to-square"></i> 修改</button>
 
-    <a class="btn btn-primary ms-5" href="/manage/tag/{{$project.Id}}/1">
+    <a class="btn btn-primary ms-5" href="/project/tag/{{$project.Id}}/1">
         <i class="fa-solid fa-list"></i> 管理版本</a>
 
     <button class="btn btn-danger ms-5" onclick="_del({{$project.Id}})">
@@ -81,7 +81,7 @@ function _del(id) {
 function _commit() {
     var data = getFormData("#edit-project-form")
     ajax("/project/save", data, function(r) {
-        window.location.href = "/manage/projects#project-"+r.id;
+        window.location.href = "/project/list#project-"+r.id;
         window.location.reload();
     })
 }

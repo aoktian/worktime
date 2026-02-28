@@ -10,21 +10,20 @@ import (
 )
 
 type User struct {
-	Id         int    `json:"id" xorm:"pk autoincr notnull comment('主键')"`
+	Id         int64  `json:"id" xorm:"pk autoincr notnull comment('主键')"`
 	Account    string `json:"account" xorm:"notnull unique comment('账号')"`
 	Name       string `json:"name" xorm:"notnull unique comment('姓名')"`
+	Nick       string `json:"nick"`
 	Password   string `json:"-" xorm:"notnull comment('密码')"`
-	Department int    `json:"department" xorm:"notnull comment('部门')"`
+	Department int64  `json:"department" xorm:"notnull comment('部门')"`
 	Team       int    `json:"team" xorm:"notnull comment('用户组')"`
 	IsAdmin    bool   `json:"is_admin" xorm:"tinyint(1) notnull default(0) comment('是否管理员')"`
 	CreatedAt  int64  `json:"created_at" xorm:"notnull comment('创建时间') created"`
 	UpdatedAt  int64  `json:"updated_at" xorm:"notnull comment('更新时间') updated"`
 
 	Token string `json:"token" xorm:"-"`
-}
 
-func (x *User) GetId() int {
-	return x.Id
+	Ps int `json:"ps"` //权限
 }
 
 func (u *User) SaveUser() error {
@@ -79,7 +78,7 @@ func LoginCheck(account, password string) (*User, error) {
 	return u, nil
 }
 
-func GetUserByID(id int) (*User, error) {
+func GetUserByID(id int64) (*User, error) {
 	u := new(User)
 	has, err := DB.ID(id).Get(u)
 	if err != nil {
@@ -104,15 +103,12 @@ func CheckUserExist(id int) bool {
 	return true
 }
 
-func GetUsers() (map[int]*User, error) {
-	users := make([]*User, 0)
+func GetUsers() (map[int64]*User, error) {
+	users := make(map[int64]*User, 0)
 	err := DB.Find(&users)
 	if err != nil {
 		return nil, err
 	}
-	result := make(map[int]*User)
-	for _, u := range users {
-		result[u.Id] = u
-	}
-	return result, nil
+
+	return users, nil
 }

@@ -12,11 +12,108 @@
 {{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
 
 <div class="container-fluid" id="taskfilter">
+    <div class="row row-cols-lg-auto g-3 align-items-center mb-3">
+
+<div class="col-12">
+
+<div class="input-group">
+    <div class="input-group-text">执行</div>
+    <select vtype="int" itag="val" name="leader_dept"
+        class="form-select"
+        value="{{.filter.LeaderDept}}"
+        onchange="onChangeDepartment( this.value, '#filterLeader', '成员' );filter_result( 1 );"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .filter.LeaderDept) }}
+    </select>
+    <select id="filterLeader" vtype="int" itag="val" name="leader"
+        class="form-select"
+        value="{{.filter.Leader}}"
+        onchange="filter_result( 1 );"
+    >
+        <option value="0">成员</option>
+{{template "selection_user.html" (dict "values" .orderedUsers "selected" .filter.Leader "filterId" .filter.LeaderDept) }}
+    </select>
+</div>
+
+        </div>
+
+        <div class="col-12">
+
+<div class="input-group">
+    <div class="input-group-text">验收</div>
+    <select vtype="int" itag="val" name="checker_dept"
+        class="form-select"
+        value="{{.filter.CheckerDept}}"
+        onchange="onChangeDepartment( this.value, '#filterChecker', '成员' );filter_result( 1 );"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .filter.CheckerDept) }}
+    </select>
+    <select id="filterChecker" vtype="int" itag="val" name="checker"
+        class="form-select"
+        value="{{.filter.Checker}}"
+        onchange="filter_result( 1 );"
+    >
+        <option value="0">成员</option>
+{{template "selection_user.html" (dict "values" .orderedUsers "selected" .filter.Checker "filterId" .filter.CheckerDept) }}
+    </select>
+</div>
+
+        </div>
+
+        <div class="col-12">
+<div class="input-group">
+    <div class="input-group-text">测试</div>
+    <select vtype="int" itag="val" name="tester_dept"
+        class="form-select"
+        value="{{.filter.TesterDept}}"
+        onchange="onChangeDepartment( this.value, '#filterTester', '成员' );filter_result( 1 );"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .filter.TesterDept) }}
+    </select>
+    <select id="filterTester" vtype="int" itag="val" name="tester"
+        class="form-select"
+        value="{{.filter.Tester}}"
+        onchange="filter_result( 1 );"
+    >
+        <option value="0">成员</option>
+{{template "selection_user.html" (dict "values" .orderedUsers "selected" .filter.Tester "filterId" .filter.TesterDept) }}
+    </select>
+</div>
+        </div>
+
+        <div class="col-12">
+<div class="input-group">
+    <div class="input-group-text">作者</div>
+    <select vtype="int" itag="val" name="author_dept"
+        class="form-select"
+        value="{{.filter.AuthorDept}}"
+        onchange="onChangeDepartment( this.value, '#filterAuthor', '成员' );filter_result( 1 );"
+    >
+        <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .filter.AuthorDept) }}
+    </select>
+    <select id="filterAuthor" vtype="int" itag="val" name="author"
+        class="form-select"
+        value="{{.filter.Author}}"
+        onchange="filter_result( 1 );"
+    >
+        <option value="0">成员</option>
+{{template "selection_user.html" (dict "values" .orderedUsers "selected" .filter.Author "filterId" .filter.AuthorDept) }}
+    </select>
+</div>
+        </div>
+
+    </div>
+
+
     <div class="row row-cols-lg-auto g-3 align-items-center">
         <div class="col-12">
 
 <div class="input-group">
-    <select itag="val" name="project"
+    <select vtype="int" itag="val" name="project"
         class="form-select"
         value="{{.filter.Project}}"
         onchange="onChangePro( this.value, '#filterTags', '版本' );filter_result( 1 );"
@@ -24,7 +121,7 @@
         <option value="0">项目</option>
 {{template "selection_map.html" (dict "values" .projects "selected" .filter.Project) }}
     </select>
-    <select id="filterTags" itag="val" name="tag"
+    <select id="filterTags" itag="val" vtype="int" name="tag"
         class="form-select"
         value="{{.filter.Tag}}"
         onchange="filter_result( 1 );"
@@ -36,79 +133,9 @@
 
         </div>
 
-        <div class="col-12">
-
-<div class="input-group">
-    <div class="input-group-text">执行</div>
-    <select itag="val" name="leader_dept"
-        class="form-select"
-        value="{{.filter.LeaderDept}}"
-        onchange="onChangeDepartment( this.value, '#filterLeader', '成员' );filter_result( 1 );"
-    >
-        <option value="0">部门</option>
-{{template "selection_map.html" (dict "values" .props.department "selected" .filter.LeaderDept) }}
-    </select>
-    <select id="filterLeader" itag="val" name="leader"
-        class="form-select"
-        value="{{.filter.Leader}}"
-        onchange="filter_result( 1 );"
-    >
-        <option value="0">成员</option>
-{{template "selection_user.html" (dict "values" .users "selected" .filter.Leader "filterId" .filter.LeaderDept) }}
-    </select>
-</div>
-
-        </div>
-
-        <div class="col-12">
-
-<div class="input-group">
-    <div class="input-group-text">验收</div>
-    <select itag="val" name="checker_dept"
-        class="form-select"
-        value="{{.filter.CheckerDept}}"
-        onchange="onChangeDepartment( this.value, '#filterChecker', '成员' );filter_result( 1 );"
-    >
-        <option value="0">部门</option>
-{{template "selection_map.html" (dict "values" .props.department "selected" .filter.CheckerDept) }}
-    </select>
-    <select id="filterChecker" itag="val" name="checker"
-        class="form-select"
-        value="{{.filter.Checker}}"
-        onchange="filter_result( 1 );"
-    >
-        <option value="0">成员</option>
-{{template "selection_user.html" (dict "values" .users "selected" .filter.Checker "filterId" .filter.CheckerDept) }}
-    </select>
-</div>
-
-        </div>
-
-        <div class="col-12">
-<div class="input-group">
-    <div class="input-group-text">品控</div>
-    <select itag="val" name="tester_dept"
-        class="form-select"
-        value="{{.filter.TesterDept}}"
-        onchange="onChangeDepartment( this.value, '#filterTester', '成员' );filter_result( 1 );"
-    >
-        <option value="0">部门</option>
-{{template "selection_map.html" (dict "values" .props.department "selected" .filter.TesterDept) }}
-    </select>
-    <select id="filterTester" itag="val" name="tester"
-        class="form-select"
-        value="{{.filter.Tester}}"
-        onchange="filter_result( 1 );"
-    >
-        <option value="0">成员</option>
-{{template "selection_user.html" (dict "values" .users "selected" .filter.Tester "filterId" .filter.TesterDept) }}
-    </select>
-</div>
-        </div>
-
         <div class="col-12"><div class="input-group">
 
-<select  itag="val" name="caty"
+<select  itag="val" vtype="int" name="caty"
     class="form-select"
     value="{{.filter.Caty}}"
     onchange="filter_result( 1 );"
@@ -121,7 +148,7 @@
 
         <div class="col-12"><div class="input-group">
 
-<select itag="val" name="status"
+<select itag="val" vtype="int" name="status"
     class="form-select"
     value="{{.filter.Status}}"
     onchange="filter_result( 1 );"
@@ -133,7 +160,7 @@
         </div></div>
 
         <div class="col-12"><div class="input-group">
-<select itag="val" name="priority"
+<select itag="val" vtype="int" name="priority"
     class="form-select"
     value="{{.filter.Priority}}"
     onchange="filter_result( 1 );"
@@ -162,10 +189,21 @@
     onchange="filter_result( 1 );"
 >
     <option value="default">状态优先</option>
-    <option value="created_at" {{if eq .filter.OrderBy "created_at"}}selected{{end}}>创建时间</option>
+    <option value="news" {{if eq .filter.OrderBy "news"}}selected{{end}}>最新任务</option>
     <option value="tag" {{if eq .filter.OrderBy "tag"}}selected{{end}}>版本优先</option>
+    <option value="created_at" {{if eq .filter.OrderBy "created_at"}}selected{{end}}>创建时间</option>
+    <option value="end_at" {{if eq .filter.OrderBy "end_at"}}selected{{end}}>限期时间</option>
 </select>
+</div></div>
 
+<div class="col-12"><div class="input-group">
+<select vtype="int" itag="val" name="main_task"
+    class="form-select"
+    onchange="filter_result( 1 );"
+>
+    <option value="0">全部任务</option>
+    <option value="1" {{if eq .filter.MainTask 1}}selected{{end}}>仅主任务</option>
+</select>
 </div></div>
 
 <div class="col-12">

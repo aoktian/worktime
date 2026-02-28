@@ -1,8 +1,11 @@
 package middlewares
 
 import (
+	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
+	"runtime"
 	"webserver/models"
 	"webserver/utils"
 
@@ -10,6 +13,34 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
+
+// 增强版异常捕获中间件
+func EnhancedRecoveryMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				// 获取堆栈信息
+				stack := make([]byte, 4096)
+				length := runtime.Stack(stack, true)
+				stackInfo := string(stack[:length])
+
+				// 记录详细错误日志
+				log.Printf("=== Panic Recovered ===\n")
+				log.Printf("Error: %v\n", err)
+				log.Printf("Stack: %s\n", stackInfo)
+				log.Printf("Method: %s\n", c.Request.Method)
+				log.Printf("URL: %s\n", c.Request.URL.String())
+				log.Printf("Client IP: %s\n", c.ClientIP())
+				log.Printf("========================\n")
+
+				utils.ErrorMsg(c, fmt.Sprintf("%v", err))
+				c.Abort()
+			}
+		}()
+
+		c.Next()
+	}
+}
 
 func ErrorHandler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -68,6 +99,12 @@ func AuthSessionMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		if !utils.GetPathPermission().HasPermission(authUser.Ps, ctx.Request.URL.Path) {
+			utils.ErrorMsg(ctx, "无权限访问，请联系管理员。")
+			ctx.Abort()
+			return
+		}
+
 		ctx.Set("authUser", authUser)
 
 		templateData := make(map[string]any)
@@ -84,7 +121,7 @@ func EnableCookieSession() gin.HandlerFunc {
 	store := cookie.NewStore([]byte("worktime"))
 
 	store.Options(sessions.Options{
-		MaxAge:   3600 * 365,           // 有效期
+		MaxAge:   86400 * 365,          // 有效期
 		Path:     "/",                  // Cookie生效路径：根路径表示全站所有接口都能携带该Cookie
 		HttpOnly: true,                 // 禁止客户端JS访问Cookie（防XSS攻击，避免Cookie被脚本窃取）
 		Secure:   false,                // 仅HTTPS环境下生效（开发环境设false，生产环境必须设true）
@@ -99,7 +136,7 @@ func EnableCookieSession() gin.HandlerFunc {
 }
 
 // register and login will save session
-func SaveSession(ctx *gin.Context, userId int) {
+func SaveSession(ctx *gin.Context, userId int64) {
 	session := sessions.Default(ctx)
 	session.Set("UserId", userId)
 	session.Save()
@@ -120,15 +157,25 @@ func HasSession(ctx *gin.Context) bool {
 	return true
 }
 
-func getSession(ctx *gin.Context) int {
+func getSession(ctx *gin.Context) int64 {
 	session := sessions.Default(ctx)
 	val := session.Get("UserId")
 	if val == nil {
 		return 0
 	}
 
-	if val.(int) == 0 {
+	switch v := val.(type) {
+	case int64:
+		if v == 0 {
+			return 0
+		}
+		return v
+	case int:
+		if v == 0 {
+			return 0
+		}
+		return int64(v)
+	default:
 		return 0
 	}
-	return val.(int)
 }

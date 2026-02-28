@@ -5,7 +5,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" id="delete-user-form">
-<input type="hidden" name="id" value="{{.user.Id}}" />
+<input vtype="int" type="hidden" name="id" value="{{.user.Id}}" />
 
         <p class="card-text">选择接收人，将删除的用户的单子转移给接收人</p>
 
@@ -25,7 +25,7 @@
     <label class="form-label">成员</label>
 <select id="reciver-select"
 class="form-select"
-itag="val" name="reciver"
+itag="val" name="reciver" vtype="int"
 >
 <option value="0">成员</option>
 </select>

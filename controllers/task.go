@@ -3,7 +3,6 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 	"webserver/models"
@@ -17,8 +16,8 @@ import (
 
 type Task struct{}
 
-func (x *Task) URLPatterns() []Route {
-	return []Route{
+func (x *Task) URLPatterns() []utils.Route {
+	return []utils.Route{
 		{Method: http.MethodGet, Path: "/task/list", ResourceFunc: x.All},
 		{Method: http.MethodGet, Path: "/task/ilist", ResourceFunc: x.Ileader},
 		{Method: http.MethodGet, Path: "/task/icheck", ResourceFunc: x.Icheck},
@@ -48,16 +47,22 @@ func (x *Task) URLPatterns() []Route {
 
 type listForm struct {
 	models.Task
-	Page    int    `json:"page"`
-	OrderBy string `json:"order_by"`
+	AuthorDept int64  `json:"author_dept"`
+	Page       int    `json:"page"`
+	OrderBy    string `json:"order_by"`
+	MainTask   int    `json:"main_task"`
 }
 
 func (x *listForm) getOrderBy() string {
 	switch x.OrderBy {
+	case "news":
+		return "task.id desc"
 	case "created_at":
 		return "task.id desc"
 	case "tag":
 		return "tag.paixu desc, status, priority desc, level desc, task.id desc"
+	case "end_at":
+		return "end_at desc"
 	default:
 		return "status, priority desc, level desc, task.id desc"
 	}
@@ -156,7 +161,7 @@ func (x *Task) List(ctx *gin.Context) {
 	con := &listForm{
 		OrderBy: "tag",
 	}
-	if !ShouldBindJSON(ctx, con) {
+	if !utils.ShouldBindJSON(ctx, con) {
 		return
 	}
 
@@ -166,6 +171,9 @@ func (x *Task) List(ctx *gin.Context) {
 func (x *Task) list(ctx *gin.Context, con *listForm) {
 	where := builder.NewCond()
 
+	if con.MainTask > 0 {
+		where = where.And(builder.Eq{"pid": 0})
+	}
 	if con.Project > 0 {
 		where = where.And(builder.Eq{"project": con.Project})
 	}
@@ -175,6 +183,12 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 
 	if con.Author > 0 {
 		where = where.And(builder.Eq{"author": con.Author})
+	} else if con.AuthorDept > 0 {
+		var authers []int64
+		models.DB.Table("user").Where("department = ?", con.AuthorDept).Cols("id").Find(&authers)
+		if len(authers) > 0 {
+			where = where.And(builder.In("author", authers))
+		}
 	}
 	if con.Leader > 0 {
 		where = where.And(builder.Eq{"leader": con.Leader})
@@ -197,9 +211,16 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 	}
 	if con.Status > 0 {
 		where = where.And(builder.Eq{"status": con.Status})
+	} else {
+		if con.OrderBy == "news" || con.OrderBy == "end_at" { //最新任务，排除已经完成
+			where = where.And(builder.Lt{"status": 900})
+		}
 	}
 	if con.Priority > 0 {
 		where = where.And(builder.Eq{"priority": con.Priority})
+	}
+	if con.Level > 0 {
+		where = where.And(builder.Eq{"level": con.Level})
 	}
 	if con.Title != "" {
 		where = where.And(builder.Like{"title", con.Title})
@@ -207,16 +228,16 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 
 	sqlWhere, args, err := builder.ToSQL(where)
 	if err != nil {
-		Error(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
 
 	total, err := models.DB.Where(sqlWhere, args...).Count(new(models.Task))
 	if err != nil {
-		Error(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
-	pagination := &Pagination{Page: con.Page, Size: TaskListPageSize, Total: int(total)}
+	pagination := &utils.Pagination{Page: int64(con.Page), Size: TaskListPageSize, Total: total}
 	pagination.FormatPage()
 
 	offset := pagination.GetOffset()
@@ -224,9 +245,9 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 	result := make([]*models.Task, 0)
 	err = models.DB.Table("task").
 		Join("LEFT", "tag", "task.tag = tag.id").
-		Where(sqlWhere, args...).OrderBy(con.getOrderBy()).Limit(TaskListPageSize, offset).Find(&result)
+		Where(sqlWhere, args...).OrderBy(con.getOrderBy()).Limit(TaskListPageSize, int(offset)).Find(&result)
 	if err != nil {
-		Error(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
 
@@ -237,12 +258,19 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 
 	x.addCommonData(templateData)
 
-	if IsAjax(ctx) {
+	if utils.IsAjax(ctx) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"#task-table": utils.GetRenderedTemplateContent(ctx, "task-list.html"),
 		})
 	} else {
-		HTML(ctx, "task.html", nil)
+		orderedTags := make([]*models.Tag, 0)
+		models.DB.OrderBy("paixu desc, id").Find(&orderedTags)
+		templateData["orderedTags"] = orderedTags
+		orderedUsers := make([]*models.User, 0)
+		models.DB.OrderBy("team, id").Find(&orderedUsers)
+		templateData["orderedUsers"] = orderedUsers
+
+		utils.HTML(ctx, "task.html", nil)
 	}
 }
 
@@ -251,7 +279,7 @@ func (x *Task) addCommonData(userData map[string]any) {
 	userData["users"] = getUsers()
 	userData["projects"] = getProjects()
 
-	userData["props"] = map[string]map[int]*models.Props{
+	userData["props"] = gin.H{
 		"caty":       models.CatyDict,
 		"status":     models.StatusDict,
 		"priority":   models.PriorityDict,
@@ -265,11 +293,11 @@ func (x *Task) NewTask(ctx *gin.Context) {
 	if taskId > 0 {
 		has, err := models.DB.Where("id = ?", taskId).Get(task)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		if !has {
-			JSONErrMsg(ctx, "没有该任务")
+			utils.JSONErrMsg(ctx, "没有该任务")
 			return
 		}
 	} else {
@@ -287,28 +315,31 @@ func (x *Task) NewTask(ctx *gin.Context) {
 	templateData["task"] = task
 
 	orderedTags := make([]*models.Tag, 0)
-	models.DB.OrderBy("paixu desc").Find(&orderedTags)
+	models.DB.OrderBy("paixu desc, id").Find(&orderedTags)
 	templateData["orderedTags"] = orderedTags
+	orderedUsers := make([]*models.User, 0)
+	models.DB.OrderBy("team, id").Find(&orderedUsers)
+	templateData["orderedUsers"] = orderedUsers
 
 	x.addCommonData(templateData)
 
-	HTML(ctx, "task-add.html", nil)
+	utils.HTML(ctx, "task-add.html", nil)
 }
 
 func (x *Task) Get(ctx *gin.Context) {
 	taskId := GetParamInt(ctx, "id")
 	if taskId == 0 {
-		JSONErrMsg(ctx, "参数错误")
+		utils.JSONErrMsg(ctx, "参数错误")
 		return
 	}
 	task := &models.Task{}
 	has, err := models.DB.Where("id = ?", taskId).Get(task)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	if !has {
-		JSONErrMsg(ctx, "没有该任务")
+		utils.JSONErrMsg(ctx, "没有该任务")
 		return
 	}
 
@@ -320,18 +351,21 @@ func (x *Task) Get(ctx *gin.Context) {
 	result := make([]*models.Task, 0)
 	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&result)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	templateData := ctx.MustGet("templateData").(map[string]any)
 	templateData["task"] = task
 	templateData["tasks"] = result
-	templateData["pagination"] = &Pagination{Page: 1, Total: len(result), Size: 10000}
+	templateData["pagination"] = &utils.Pagination{Page: 1, Total: int64(len(result)), Size: 10000}
 
 	orderedTags := make([]*models.Tag, 0)
-	models.DB.OrderBy("paixu desc").Find(&orderedTags)
+	models.DB.OrderBy("paixu desc, id").Find(&orderedTags)
 	templateData["orderedTags"] = orderedTags
+	orderedUsers := make([]*models.User, 0)
+	models.DB.OrderBy("team, id").Find(&orderedUsers)
+	templateData["orderedUsers"] = orderedUsers
 
 	x.addCommonData(templateData)
 
@@ -339,61 +373,61 @@ func (x *Task) Get(ctx *gin.Context) {
 	models.DB.Where("task_id = ?", task.Id).Find(&comments)
 	templateData["comments"] = comments
 
-	HTML(ctx, "thread.html", templateData)
+	utils.HTML(ctx, "thread.html", templateData)
 }
 
 type FormRelated struct {
-	TaskId    int `json:"task_id"`
-	RelatedId int `json:"related_id"`
+	TaskId    int   `json:"task_id"`
+	RelatedId int64 `json:"related_id"`
 }
 
 func (x *Task) RelatedTo(ctx *gin.Context) {
 	form := &FormRelated{}
-	if !ShouldBindJSON(ctx, form) {
+	if !utils.ShouldBindJSON(ctx, form) {
 		return
 	}
 
 	task := &models.Task{}
 	has, err := models.DB.ID(form.TaskId).Get(task)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	if !has {
-		JSONErrMsg(ctx, fmt.Sprintf("未找到任务:%d", form.TaskId))
+		utils.JSONErrMsg(ctx, fmt.Sprintf("未找到任务:%d", form.TaskId))
 		return
 	}
 
 	related := &models.Task{Id: form.RelatedId}
 	has, err = models.DB.Get(related)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	if !has {
-		JSONErrMsg(ctx, fmt.Sprintf("未找到任务:%d", form.RelatedId))
+		utils.JSONErrMsg(ctx, fmt.Sprintf("未找到任务:%d", form.RelatedId))
 		return
 	}
 
 	if task.Pid == 0 {
 		total, err := models.DB.Where("pid = ?", task.Id).Count(new(models.Task))
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		if total > 0 {
-			JSONError(ctx, errors.New("该任务下有子任务，不能修改关联关系"))
+			utils.JSONError(ctx, errors.New("该任务下有子任务，不能修改关联关系"))
 			return
 		}
 	}
 
 	if task.Pid == form.RelatedId {
-		JSONError(ctx, errors.New("没有修改关联关系"))
+		utils.JSONError(ctx, errors.New("没有修改关联关系"))
 		return
 	}
 
 	if form.RelatedId == task.Id {
-		JSONError(ctx, errors.New("不能关联自己"))
+		utils.JSONError(ctx, errors.New("不能关联自己"))
 		return
 	}
 
@@ -407,7 +441,7 @@ func (x *Task) RelatedTo(ctx *gin.Context) {
 	}
 	_, err = models.DB.Table("task").Where("id = ?", task.Id).Update(update)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
@@ -419,22 +453,22 @@ func (x *Task) RelatedTo(ctx *gin.Context) {
 func (x *Task) Related(ctx *gin.Context) {
 	taskId := GetParamInt(ctx, "id")
 	if taskId == 0 {
-		JSONErrMsg(ctx, "参数错误")
+		utils.JSONErrMsg(ctx, "参数错误")
 		return
 	}
 
-	task := &models.Task{Id: int(taskId)}
+	task := &models.Task{Id: int64(taskId)}
 	has, err := models.DB.Get(task)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	if !has {
-		JSONErrMsg(ctx, "任务不存在")
+		utils.JSONErrMsg(ctx, "任务不存在")
 		return
 	}
 
-	var searchId int
+	var searchId int64
 	if task.Pid > 0 {
 		searchId = task.Pid
 	} else {
@@ -444,7 +478,7 @@ func (x *Task) Related(ctx *gin.Context) {
 	tasks := make([]*models.Task, 0)
 	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&tasks)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
@@ -459,7 +493,7 @@ func (x *Task) Related(ctx *gin.Context) {
 
 	h := gin.H{
 		"tasks":      tasks,
-		"pagination": &Pagination{Page: 1, Total: len(tasks), Size: 10000},
+		"pagination": &utils.Pagination{Page: 1, Total: int64(len(tasks)), Size: 10000},
 
 		"tags":     getTags(),
 		"users":    getUsers(),
@@ -478,20 +512,20 @@ func (x *Task) Related(ctx *gin.Context) {
 	})
 }
 
-func (x *Task) checkUser(ctx *gin.Context, id *int, dept *int, text string) bool {
+func (x *Task) checkUser(ctx *gin.Context, id *int64, dept *int64, text string) bool {
 	if *id > 0 {
 		leader, err := models.GetUserByID(*id)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return false
 		}
 		if leader == nil {
-			JSONErrMsg(ctx, text+"不存在")
+			utils.JSONErrMsg(ctx, text+"不存在")
 			return false
 		}
 
 		if leader.Department == 0 {
-			JSONErrMsg(ctx, text+"的部门未设置")
+			utils.JSONErrMsg(ctx, text+"的部门未设置")
 			return false
 		}
 
@@ -515,21 +549,21 @@ func (x *Task) checkUpdate(ctx *gin.Context, update *models.Task) bool {
 
 	if update.Caty > 0 {
 		if _, ok := models.CatyDict[update.Caty]; !ok {
-			JSONErrMsg(ctx, "分类不存在")
+			utils.JSONErrMsg(ctx, "分类不存在")
 			return false
 		}
 	}
 
 	if update.Status > 0 {
 		if _, ok := models.StatusDict[update.Status]; !ok {
-			JSONErrMsg(ctx, "状态不存在")
+			utils.JSONErrMsg(ctx, "状态不存在")
 			return false
 		}
 	}
 
 	if update.Priority > 0 {
 		if _, ok := models.PriorityDict[update.Priority]; !ok {
-			JSONErrMsg(ctx, "优先级不存在")
+			utils.JSONErrMsg(ctx, "优先级不存在")
 			return false
 		}
 	}
@@ -538,11 +572,11 @@ func (x *Task) checkUpdate(ctx *gin.Context, update *models.Task) bool {
 		project := &models.Project{Id: update.Project}
 		has, err := models.DB.Exist(project)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return false
 		}
 		if !has {
-			JSONErrMsg(ctx, "项目不存在")
+			utils.JSONErrMsg(ctx, "项目不存在")
 			return false
 		}
 	}
@@ -551,11 +585,11 @@ func (x *Task) checkUpdate(ctx *gin.Context, update *models.Task) bool {
 		tag := &models.Tag{Id: update.Tag}
 		has, err := models.DB.Exist(tag)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return false
 		}
 		if !has {
-			JSONErrMsg(ctx, "版本不存在")
+			utils.JSONErrMsg(ctx, "版本不存在")
 			return false
 		}
 	}
@@ -587,7 +621,7 @@ func init() {
 	}()
 }
 
-func (x *Task) GetLock(id int) *TaskLock {
+func (x *Task) GetLock(id int64) *TaskLock {
 	if v, ok := taskLocks.Load(id); ok {
 		return v.(*TaskLock)
 	}
@@ -599,7 +633,7 @@ func (x *Task) GetLock(id int) *TaskLock {
 
 func (x *Task) Save(ctx *gin.Context) {
 	update := &models.Task{}
-	if !ShouldBindJSON(ctx, update) {
+	if !utils.ShouldBindJSON(ctx, update) {
 		return
 	}
 
@@ -607,7 +641,7 @@ func (x *Task) Save(ctx *gin.Context) {
 		lock := x.GetLock(update.Id)
 		isLock := lock.TryLock()
 		if !isLock {
-			JSONErrMsg(ctx, "任务正在被其他用户修改")
+			utils.JSONErrMsg(ctx, "任务正在被其他用户修改")
 			return
 		}
 		defer lock.Unlock()
@@ -623,11 +657,11 @@ func (x *Task) Save(ctx *gin.Context) {
 			parentTask := &models.Task{}
 			has, err := models.DB.Where("id = ?", update.Pid).Get(parentTask)
 			if err != nil {
-				JSONError(ctx, err)
+				utils.JSONError(ctx, err)
 				return
 			}
 			if !has {
-				JSONErrMsg(ctx, "父任务不存在")
+				utils.JSONErrMsg(ctx, "父任务不存在")
 				return
 			}
 			if parentTask.Pid > 0 {
@@ -645,27 +679,27 @@ func (x *Task) Save(ctx *gin.Context) {
 	if update.Id > 0 {
 		has, err := models.DB.Where("id = ?", update.Id).Get(task)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		if !has {
-			JSONErrMsg(ctx, "任务不存在")
+			utils.JSONErrMsg(ctx, "任务不存在")
 			return
 		}
 
 		tag := &models.Tag{}
 		has, err = models.DB.Where("id = ?", task.Tag).Get(tag)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		if !has {
-			JSONErrMsg(ctx, "版本不存在")
+			utils.JSONErrMsg(ctx, "版本不存在")
 			return
 		}
 
 		if update.Lockn != task.Lockn+1 {
-			JSONErrMsg(ctx, "任务已经被其他人抢先一步修改，请刷新查看")
+			utils.JSONErrMsg(ctx, "任务已经被其他人抢先一步修改，请刷新查看")
 			return
 		}
 	}
@@ -673,7 +707,7 @@ func (x *Task) Save(ctx *gin.Context) {
 	if update.Id > 0 {
 		_, err := models.DB.Id(update.Id).Update(update)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 
@@ -682,7 +716,7 @@ func (x *Task) Save(ctx *gin.Context) {
 	} else {
 		_, err := models.DB.InsertOne(update)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 
@@ -707,15 +741,14 @@ func (x *Task) log(authUser *models.User, task, newtask *models.Task) {
 		logs = x.logContent(authUser, logs, task.Id, task.Content, newtask.Content, "content")
 	}
 
-	props := models.Props{}
 	if newtask.Status > 0 {
-		name := props.GetName(task.Status, &models.StatusDict)
-		nameTo := props.GetName(newtask.Status, &models.StatusDict)
+		name := models.GetPropsName(task.Status, models.StatusDict)
+		nameTo := models.GetPropsName(newtask.Status, models.StatusDict)
 		logs = x.logContent(authUser, logs, task.Id, name, nameTo, "status")
 	}
 	if newtask.Priority > 0 {
-		name := props.GetName(task.Priority, &models.PriorityDict)
-		nameTo := props.GetName(newtask.Priority, &models.PriorityDict)
+		name := models.GetPropsName(task.Priority, models.PriorityDict)
+		nameTo := models.GetPropsName(newtask.Priority, models.PriorityDict)
 		logs = x.logContent(authUser, logs, task.Id, name, nameTo, "priority")
 	}
 
@@ -739,7 +772,7 @@ func (x *Task) log(authUser *models.User, task, newtask *models.Task) {
 	models.DB.Insert(&logs)
 }
 
-func (x *Task) logTag(authUser *models.User, logs []*models.TaskLog, taskId int, value, valueto int) []*models.TaskLog {
+func (x *Task) logTag(authUser *models.User, logs []*models.TaskLog, taskId int64, value, valueto int64) []*models.TaskLog {
 	if value == valueto {
 		return logs
 	}
@@ -755,7 +788,7 @@ func (x *Task) logTag(authUser *models.User, logs []*models.TaskLog, taskId int,
 	return x.logContent(authUser, logs, taskId, tag.Name, tagTo.Name, "tag")
 }
 
-func (x *Task) logProject(authUser *models.User, logs []*models.TaskLog, taskId int, value, valueto int) []*models.TaskLog {
+func (x *Task) logProject(authUser *models.User, logs []*models.TaskLog, taskId int64, value, valueto int) []*models.TaskLog {
 	if value == valueto {
 		return logs
 	}
@@ -770,7 +803,7 @@ func (x *Task) logProject(authUser *models.User, logs []*models.TaskLog, taskId 
 	return x.logContent(authUser, logs, taskId, project.Name, projectTo.Name, "project")
 }
 
-func (x *Task) logUser(authUser *models.User, logs []*models.TaskLog, taskId int, value, valueto int, field string) []*models.TaskLog {
+func (x *Task) logUser(authUser *models.User, logs []*models.TaskLog, taskId int64, value, valueto int64, field string) []*models.TaskLog {
 	if value == valueto {
 		return logs
 	}
@@ -797,7 +830,7 @@ var logColName = map[string]string{
 	"tester":   "测试人",
 }
 
-func (x *Task) logContent(authUser *models.User, logs []*models.TaskLog, taskId int, value, valueto, field string) []*models.TaskLog {
+func (x *Task) logContent(authUser *models.User, logs []*models.TaskLog, taskId int64, value, valueto, field string) []*models.TaskLog {
 	if value == valueto {
 		return logs
 	}
@@ -824,7 +857,7 @@ func (x *Task) BatchUpdate(ctx *gin.Context) {
 	form.Update = &models.Task{}
 	form.Ids = []int{}
 
-	if !ShouldBindJSON(ctx, form) {
+	if !utils.ShouldBindJSON(ctx, form) {
 		return
 	}
 
@@ -833,24 +866,24 @@ func (x *Task) BatchUpdate(ctx *gin.Context) {
 	}
 
 	if len(form.Ids) == 0 {
-		JSONErrMsg(ctx, "请选择要修改的任务")
+		utils.JSONErrMsg(ctx, "请选择要修改的任务")
 		return
 	}
 
 	tasks := []*models.Task{}
 	err := models.DB.In("id", form.Ids).Find(&tasks)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	if len(tasks) == 0 {
-		JSONError(ctx, errors.New("没有找到相关任务"))
+		utils.JSONError(ctx, errors.New("没有找到相关任务"))
 		return
 	}
 
 	_, err = models.DB.In("id", form.Ids).Update(form.Update)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
@@ -859,7 +892,7 @@ func (x *Task) BatchUpdate(ctx *gin.Context) {
 		go x.log(authUser, task, form.Update)
 	}
 
-	JSONMsg(ctx, "更新成功")
+	utils.JSONMsg(ctx, "更新成功")
 }
 
 func (x *Task) GetLog(ctx *gin.Context) {
@@ -868,14 +901,14 @@ func (x *Task) GetLog(ctx *gin.Context) {
 	results := make([]*models.TaskLog, 0)
 	err := models.DB.Where("task_id = ?", taskId).Find(&results)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	task := &models.Task{}
 	models.DB.Id(taskId).Get(task)
 
-	Dialog(ctx, "task-log.html", gin.H{
+	utils.Dialog(ctx, "task-log.html", gin.H{
 		"task": task,
 		"logs": results,
 	})
@@ -890,21 +923,13 @@ func (x *Task) UploadImage(ctx *gin.Context) {
 		return
 	}
 
-	now := time.Now()
-	monthdir := fmt.Sprintf("%d%d", now.Year(), now.Month())
-
-	dir := utils.AppConfig.Server.UploadDir + "/" + monthdir
+	dir, monthdir, err := utils.GetImageSaveDir()
 
 	// 检查文件目录是否存在
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		// 如果目录不存在，则创建目录
-		err := os.MkdirAll(dir, os.ModePerm)
-		if err != nil {
-			ctx.JSON(http.StatusOK, gin.H{
-				"err": err.Error(),
-			})
-			return
-		}
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"err": err.Error(),
+		})
 	}
 
 	// 重命名文件
@@ -929,18 +954,18 @@ func (x *Task) LogDiff(ctx *gin.Context) {
 	log := &models.TaskLog{}
 	has, err := models.DB.Id(id).Get(log)
 	if err != nil {
-		Error(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
 	if !has {
-		ErrorMsg(ctx, "没有找到相关日志")
+		utils.ErrorMsg(ctx, "没有找到相关日志")
 		return
 	}
 
 	task := &models.Task{}
 	models.DB.Id(log.TaskId).Get(task)
 
-	HTML(ctx, "log-diff.html", gin.H{
+	utils.HTML(ctx, "log-diff.html", gin.H{
 		"log":      log,
 		"task":     task,
 		"authUser": GetAuthUser(ctx),
@@ -953,11 +978,11 @@ func (x *Task) logDiff(ctx *gin.Context) {
 	log := &models.TaskLog{}
 	has, err := models.DB.Id(id).Get(log)
 	if err != nil {
-		Error(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
 	if !has {
-		ErrorMsg(ctx, "没有找到相关日志")
+		utils.ErrorMsg(ctx, "没有找到相关日志")
 		return
 	}
 
@@ -970,7 +995,7 @@ func (x *Task) logDiff(ctx *gin.Context) {
 	}
 	res, err := cfg.HTMLdiff([]string{log.Value, log.ValueTo})
 	if err != nil {
-		Error(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
 	mergedHTML := res[0]
@@ -978,7 +1003,7 @@ func (x *Task) logDiff(ctx *gin.Context) {
 	task := &models.Task{}
 	models.DB.Id(log.TaskId).Get(task)
 
-	HTML(ctx, "log-diff.html", gin.H{
+	utils.HTML(ctx, "log-diff.html", gin.H{
 		"mergedHTML": mergedHTML,
 		"task":       task,
 	})

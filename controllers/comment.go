@@ -11,8 +11,8 @@ import (
 type Comment struct {
 }
 
-func (x *Comment) URLPatterns() []Route {
-	return []Route{
+func (x *Comment) URLPatterns() []utils.Route {
+	return []utils.Route{
 		{Method: http.MethodPost, Path: "/comment/save", ResourceFunc: x.Save},
 		{Method: http.MethodPost, Path: "/comment/log/:id", ResourceFunc: x.GetLog},
 	}
@@ -23,14 +23,14 @@ func (x *Comment) GetLog(ctx *gin.Context) {
 	results := make([]*models.CommentLog, 0)
 	err := models.DB.Where("comment_id = ?", id).Find(&results)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	comment := &models.Comment{}
 	models.DB.Where("id = ?", id).Get(comment)
 
-	Dialog(ctx, "comment-log.html", gin.H{
+	utils.Dialog(ctx, "comment-log.html", gin.H{
 		"logs":    results,
 		"comment": comment,
 	})
@@ -38,7 +38,7 @@ func (x *Comment) GetLog(ctx *gin.Context) {
 
 func (x *Comment) Save(ctx *gin.Context) {
 	update := &models.Comment{}
-	if !ShouldBindJSON(ctx, update) {
+	if !utils.ShouldBindJSON(ctx, update) {
 		return
 	}
 
@@ -52,11 +52,11 @@ func (x *Comment) Save(ctx *gin.Context) {
 		task := &models.Task{}
 		has, err := models.DB.Where("id = ?", update.TaskId).Get(task)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		if !has {
-			JSONErrMsg(ctx, "任务不存在")
+			utils.JSONErrMsg(ctx, "任务不存在")
 			return
 		}
 	}
@@ -65,11 +65,11 @@ func (x *Comment) Save(ctx *gin.Context) {
 		comment := &models.Comment{}
 		has, err := models.DB.Where("id = ?", update.Id).Get(comment)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		if !has {
-			JSONErrMsg(ctx, "编辑的记录不存在")
+			utils.JSONErrMsg(ctx, "编辑的记录不存在")
 			return
 		}
 		go x.log(authUser, comment, update)
@@ -79,13 +79,13 @@ func (x *Comment) Save(ctx *gin.Context) {
 	if update.Id == 0 {
 		_, err := models.DB.Insert(update)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 	} else {
 		_, err := models.DB.ID(update.Id).Update(update)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 	}

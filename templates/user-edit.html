@@ -5,25 +5,28 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" id="user-edit-form">
-<input type="hidden" name="id" value="{{.user.Id}}" />
+<input vtype="int" type="hidden" name="id" value="{{.user.Id}}" />
 
-<div class="mb-3">
+<div class="row g-3">
+
+<div class="col-md-4">
     <label class="form-label">帐号</label>
     <input name="account" value="{{.user.Account}}" class="form-control" type="text"  />
 </div>
-<div class="mb-3">
-    <label class="form-label">密码</label>
-    <input name="password" class="form-control" type="text"  />
-</div>
 
-<div class="mb-3">
-    <label class="form-label">名称</label>
+<div class="col-md-4">
+    <label class="form-label">姓名</label>
     <input name="name" value="{{.user.Name}}" class="form-control" type="text"  />
 </div>
 
-<div class="mb-3">
+<div class="col-md-4">
+    <label class="form-label">花名</label>
+    <input name="nick" value="{{.user.Nick}}" class="form-control" type="text"  />
+</div>
+
+<div class="col-md-4">
     <label class="form-label">部门</label>
-    <select itag="val" name="department"
+    <select vtype="int" name="department"
         class="form-select"
         value="{{.user.Department}}"
     >
@@ -32,9 +35,21 @@
     </select>
 </div>
 
-<div class="mb-3">
-    <label class="form-label">分组</label>
-    <input name="team" value="{{.user.Team}}" class="form-control" type="text"  />
+<div class="col-md-4">
+    <label class="form-label">工作组</label>
+    <input vtype="int" name="team" value="{{.user.Team}}" class="form-control" type="number"  />
+</div>
+
+<div class="col-md-4">
+    <label class="form-label">权限组</label>
+    <select vtype="int" name="ps"
+        class="form-select"
+        value="{{.user.Ps}}"
+    >
+{{template "selection_map.html" (dict "values" .psGroups "selected" .user.Ps) }}
+    </select>
+</div>
+
 </div>
 
         </div>

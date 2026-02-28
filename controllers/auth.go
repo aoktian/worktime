@@ -14,8 +14,8 @@ import (
 type Auth struct {
 }
 
-func (x *Auth) URLPatterns() []Route {
-	return []Route{
+func (x *Auth) URLPatterns() []utils.Route {
+	return []utils.Route{
 		{Method: http.MethodGet, Path: "/test", ResourceFunc: x.Test},
 		{Method: http.MethodGet, Path: "/home", ResourceFunc: x.Home},
 		{Method: http.MethodPost, Path: "/login", ResourceFunc: x.Login},
@@ -40,13 +40,13 @@ type ReqLogin struct {
 
 func (x *Auth) Login(c *gin.Context) {
 	if utils.AppConfig.Feishu.ClientID != "" {
-		JSONErrMsg(c, "已配置飞书授权登录，请使用飞书登录")
+		utils.JSONErrMsg(c, "已配置飞书授权登录，请使用飞书登录")
 		return
 	}
 
 	var req ReqLogin
 	if err := c.ShouldBind(&req); err != nil {
-		JSONError(c, err)
+		utils.JSONError(c, err)
 		return
 	}
 
@@ -54,23 +54,23 @@ func (x *Auth) Login(c *gin.Context) {
 
 	has, err := models.DB.Where("account = ?", req.Account).Get(u)
 	if err != nil {
-		JSONError(c, err)
+		utils.JSONError(c, err)
 		return
 	}
 	if !has {
-		JSONError(c, errors.New("user not found"))
+		utils.JSONError(c, errors.New("user not found"))
 		return
 	}
 
 	err = models.VerifyPassword(req.Password, u.Password)
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		JSONError(c, err)
+		utils.JSONError(c, err)
 		return
 	}
 
 	middlewares.SaveSession(c, u.Id)
 
-	Redirect(c, "/task/ilist", 0)
+	utils.Redirect(c, "/task/ilist", 0)
 }
 
 func (x *Auth) Logout(ctx *gin.Context) {

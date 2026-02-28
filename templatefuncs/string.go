@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"webserver/controllers"
+	"webserver/models"
+	"webserver/utils"
 )
 
 func html(v interface{}) template.HTML {
@@ -16,19 +17,19 @@ func jsonString(v interface{}) template.JS {
 	return template.JS(a)
 }
 
-func pagesHtml(pagination *controllers.Pagination, pagef string) template.HTML {
+func pagesHtml(pagination *utils.Pagination, pagef string) template.HTML {
 	if pagination == nil {
 		return ""
 	}
 
-	pageShow := 10
-	offsetShow := 2
+	pageShow := int64(10)
+	offsetShow := int64(2)
 	pages := pagination.GetTotalPage()
 
 	result := "<nav><ul class='pagination'>"
 
-	var from int
-	var to int
+	var from int64
+	var to int64
 	if pages <= pageShow {
 		from = 1
 		to = pages
@@ -68,4 +69,16 @@ func pagesHtml(pagination *controllers.Pagination, pagef string) template.HTML {
 	result += "</ul></nav>"
 
 	return template.HTML(result)
+}
+
+func taskColor(priority, status int64) string {
+	return fmt.Sprintf("priority-%d status-%d", priority, status)
+}
+
+func userName(users map[int64]*models.User, userId int64) string {
+	if user, ok := users[userId]; ok {
+		return user.Name
+	} else {
+		return "-"
+	}
 }

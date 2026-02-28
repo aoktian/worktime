@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"webserver/models"
 	"webserver/utils"
 
@@ -13,40 +14,39 @@ import (
 type User struct {
 }
 
-func (x *User) URLPatterns() []Route {
-	return []Route{
-		{Method: http.MethodGet, Path: "/manage/users", ResourceFunc: x.List},
+func (x *User) URLPatterns() []utils.Route {
+	return []utils.Route{
+		{Path: "/user/list", ResourceFunc: x.List, Method: http.MethodGet},
 
-		{Method: http.MethodPost, Path: "/user/modify/:id", ResourceFunc: x.Modify},
-		{Method: http.MethodPost, Path: "/user/save", ResourceFunc: x.Save},
-		{Method: http.MethodPost, Path: "/user/deleteform/:id", ResourceFunc: x.DeleteForm},
-		{Method: http.MethodPost, Path: "/user/delete", ResourceFunc: x.Delete},
+		{Path: "/user/modify/:id", ResourceFunc: x.Modify, Method: http.MethodPost},
+		{Path: "/user/save", ResourceFunc: x.Save, Method: http.MethodPost},
+		{Path: "/user/deleteform/:id", ResourceFunc: x.DeleteForm, Method: http.MethodPost},
+		{Path: "/user/delete", ResourceFunc: x.Delete, Method: http.MethodPost},
+
+		{Path: "/permission/modify", ResourceFunc: x.modifyPermission, Method: http.MethodPost},
 	}
 }
 
-func getUsers() map[int]*models.User {
-	list := make([]*models.User, 0)
-	models.DB.Find(&list)
-	result := make(map[int]*models.User)
-	for _, u := range list {
-		result[u.Id] = u
-	}
-	return result
+func getUsers() map[int64]*models.User {
+	results := make(map[int64]*models.User, 0)
+	models.DB.OrderBy("team").Find(&results)
+	return results
 }
 
 func (x *User) List(ctx *gin.Context) {
 	results := make([]*models.User, 0)
-	err := models.DB.OrderBy("department, is_admin desc, team").Find(&results)
+	err := models.DB.OrderBy("department, team, id").Find(&results)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	h := ctx.MustGet("templateData").(map[string]any)
 	h["users"] = results
 	h["departments"] = models.DepartmentDict
+	h["psGroups"] = utils.GetPathPermission().UserGroups
 
-	HTML(ctx, "users.html", nil)
+	utils.HTML(ctx, "users.html", nil)
 }
 
 func (x *User) Modify(ctx *gin.Context) {
@@ -55,11 +55,11 @@ func (x *User) Modify(ctx *gin.Context) {
 	if id > 0 {
 		has, err := models.DB.ID(id).Get(user)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		if !has {
-			JSONError(ctx, errors.New("用户不存在"))
+			utils.JSONError(ctx, errors.New("用户不存在"))
 			return
 		}
 	}
@@ -67,6 +67,7 @@ func (x *User) Modify(ctx *gin.Context) {
 	h := ctx.MustGet("templateData").(map[string]any)
 	h["user"] = user
 	h["departments"] = models.DepartmentDict
+	h["psGroups"] = utils.GetPathPermission().UserGroups
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"dialog": utils.GetRenderedTemplateContent(ctx, "user-edit.html"),
@@ -75,19 +76,19 @@ func (x *User) Modify(ctx *gin.Context) {
 
 func (x *User) Save(ctx *gin.Context) {
 	user := &models.User{}
-	if !ShouldBindJSON(ctx, user) {
+	if !utils.ShouldBindJSON(ctx, user) {
 		return
 	}
 
 	// 保持上下的沟通，故意这么设计
 	authUser := ctx.MustGet("authUser").(*models.User)
 	if !authUser.IsAdmin {
-		JSONErrMsg(ctx, "只有管理员有权限")
+		utils.JSONErrMsg(ctx, "只有管理员有权限")
 		return
 	}
 
 	if user.Department == 0 {
-		JSONErrMsg(ctx, "部门不能为空")
+		utils.JSONErrMsg(ctx, "部门不能为空")
 		return
 	}
 
@@ -95,7 +96,7 @@ func (x *User) Save(ctx *gin.Context) {
 	if user.Password != "" {
 		hashedPassword, err := user.GenerateFromPassword()
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		user.Password = string(hashedPassword)
@@ -104,7 +105,7 @@ func (x *User) Save(ctx *gin.Context) {
 	if user.Id == 0 {
 		_, err := models.DB.InsertOne(user)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 
@@ -114,26 +115,33 @@ func (x *User) Save(ctx *gin.Context) {
 		return
 	}
 
-	exist, _ := models.GetUserByID(user.Id)
-	if exist == nil {
-		JSONErrMsg(ctx, "用户不存在")
+	target, _ := models.GetUserByID(user.Id)
+	if target == nil {
+		utils.JSONErrMsg(ctx, "用户不存在")
 		return
+	}
+
+	if target.Ps != user.Ps || target.Name != user.Name {
+		if !utils.GetPathPermission().HasPermission(authUser.Ps, "/permission/modify") {
+			utils.JSONErrMsg(ctx, "没有权限")
+			return
+		}
 	}
 
 	session := models.DB.NewSession()
 	defer session.Close()
 
 	if err := session.Begin(); err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
-	if exist.Department != user.Department {
+	if target.Department != user.Department {
 		//部门发生了变化
 		_, err := session.Exec("UPDATE task SET leader_dept = ? WHERE leader = ?", user.Department, user.Id)
 		if err != nil {
 			session.Rollback()
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 	}
@@ -141,13 +149,13 @@ func (x *User) Save(ctx *gin.Context) {
 	_, err := models.DB.ID(user.Id).Update(user)
 	if err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	if err := session.Commit(); err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
@@ -157,8 +165,8 @@ func (x *User) Save(ctx *gin.Context) {
 }
 
 type DelForm struct {
-	Id      int `json:"id"`
-	Reciver int `json:"reciver"`
+	Id      int64 `json:"id"`
+	Reciver int   `json:"reciver"`
 }
 
 func (x *User) DeleteForm(ctx *gin.Context) {
@@ -167,11 +175,11 @@ func (x *User) DeleteForm(ctx *gin.Context) {
 	if id > 0 {
 		has, err := models.DB.ID(id).Get(user)
 		if err != nil {
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 		if !has {
-			JSONError(ctx, errors.New("用户不存在"))
+			utils.JSONError(ctx, errors.New("用户不存在"))
 			return
 		}
 	}
@@ -184,55 +192,55 @@ func (x *User) DeleteForm(ctx *gin.Context) {
 	delete(users, user.Id)
 	h["users"] = users
 
-	Dialog(ctx, "user-delete.html", nil)
+	utils.Dialog(ctx, "user-delete.html", nil)
 }
 
 func (x *User) Delete(ctx *gin.Context) {
 	authUser := GetAuthUser(ctx)
 	if !authUser.IsAdmin {
-		JSONError(ctx, errors.New("不是管理员不能删除"))
+		utils.JSONError(ctx, errors.New("不是管理员不能删除"))
 		return
 	}
 
 	form := &DelForm{}
-	if !ShouldBindJSON(ctx, form) {
+	if !utils.ShouldBindJSON(ctx, form) {
 		return
 	}
 
 	if authUser.Id == form.Id {
-		JSONError(ctx, errors.New("不能删除自己"))
+		utils.JSONError(ctx, errors.New("不能删除自己"))
 		return
 	}
 
 	if form.Reciver == 0 {
-		JSONError(ctx, errors.New("请选择接收人"))
+		utils.JSONError(ctx, errors.New("请选择接收人"))
 		return
 	}
 
 	user := &models.User{}
 	has, err := models.DB.ID(form.Id).Get(user)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	if !has {
-		JSONError(ctx, errors.New("用户不存在"))
+		utils.JSONError(ctx, errors.New("用户不存在"))
 		return
 	}
 
 	receiver := &models.User{}
 	has, err = models.DB.ID(form.Reciver).Get(receiver)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	if !has {
-		JSONError(ctx, errors.New("接收人不存在"))
+		utils.JSONError(ctx, errors.New("接收人不存在"))
 		return
 	}
 
 	if user.Id == receiver.Id {
-		JSONError(ctx, errors.New("接收人不能是自己"))
+		utils.JSONError(ctx, errors.New("接收人不能是自己"))
 		return
 	}
 
@@ -240,7 +248,7 @@ func (x *User) Delete(ctx *gin.Context) {
 	defer session.Close()
 
 	if err := session.Begin(); err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
@@ -254,7 +262,7 @@ func (x *User) Delete(ctx *gin.Context) {
 	for _, field := range fieldsToUpdate {
 		if err := updateTaskField(field); err != nil {
 			session.Rollback()
-			JSONError(ctx, err)
+			utils.JSONError(ctx, err)
 			return
 		}
 	}
@@ -263,49 +271,85 @@ func (x *User) Delete(ctx *gin.Context) {
 	_, err = session.Exec("UPDATE task SET leader = ?, leader_dept = ? WHERE leader = ?", receiver.Id, receiver.Department, user.Id)
 	if err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	_, err = session.Exec("UPDATE task SET checker = ?, checker_dept = ? WHERE checker = ?", receiver.Id, receiver.Department, user.Id)
 	if err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	_, err = session.Exec("UPDATE task SET tester = ?, tester_dept = ? WHERE tester = ?", receiver.Id, receiver.Department, user.Id)
 	if err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	_, err = session.Exec("UPDATE comment SET author = ? WHERE author = ?", receiver.Id, user.Id)
 	if err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 	_, err = session.Exec("UPDATE comment SET editor = ? WHERE editor = ?", receiver.Id, user.Id)
 	if err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	_, err = session.ID(user.Id).Delete(user)
 	if err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	if err := session.Commit(); err != nil {
 		session.Rollback()
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"id": user.Id,
 	})
+}
+
+func (x *User) modifyPermission(ctx *gin.Context) {
+	params := &models.User{}
+	if !utils.ShouldBindJSON(ctx, params) {
+		return
+	}
+
+	if params.Name == "" {
+		data, err := os.ReadFile("./conf/permission.yaml")
+		if err != nil {
+			utils.Error(ctx, err)
+			return
+		}
+		utils.Dialog(ctx, "permission.html", gin.H{
+			"data": string(data),
+		})
+		return
+	}
+
+	//写入到文件
+	err := os.WriteFile("./conf/permission.yaml", []byte(params.Name), 0644)
+	if err != nil {
+		utils.Error(ctx, err)
+		return
+	}
+
+	newPermission, err := utils.LoadPermissionConfig("./conf/permission.yaml")
+	if err != nil {
+		utils.Error(ctx, err)
+		return
+	}
+
+	utils.SetPathPermission(newPermission)
+
+	utils.JSONMsg(ctx, "修改成功")
 }

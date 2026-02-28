@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 	"webserver/models"
+	"webserver/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -13,9 +14,9 @@ import (
 type Tag struct {
 }
 
-func (x *Tag) URLPatterns() []Route {
-	return []Route{
-		{Method: http.MethodGet, Path: "/manage/tag/:project_id/:page", ResourceFunc: x.InProject},
+func (x *Tag) URLPatterns() []utils.Route {
+	return []utils.Route{
+		{Method: http.MethodGet, Path: "/project/tag/:project_id/:page", ResourceFunc: x.InProject},
 		{Method: http.MethodPost, Path: "/tag/modify/:id", ResourceFunc: x.Modify},
 		{Method: http.MethodPost, Path: "/tag/save", ResourceFunc: x.Save},
 		{Method: http.MethodPost, Path: "/tag/delete/:id", ResourceFunc: x.Delete},
@@ -24,14 +25,10 @@ func (x *Tag) URLPatterns() []Route {
 	}
 }
 
-func getTags() map[int]*models.Tag {
-	list := make([]*models.Tag, 0)
-	models.DB.Find(&list)
-	result := make(map[int]*models.Tag)
-	for _, u := range list {
-		result[u.Id] = u
-	}
-	return result
+func getTags() map[int64]*models.Tag {
+	results := make(map[int64]*models.Tag, 0)
+	models.DB.Find(&results)
+	return results
 }
 
 func (x *Tag) InProject(ctx *gin.Context) {
@@ -41,19 +38,19 @@ func (x *Tag) InProject(ctx *gin.Context) {
 	project := &models.Project{}
 	models.DB.Id(project_id).Get(project)
 
-	pagination := &Pagination{Page: int(page), Size: 15}
+	pagination := &utils.Pagination{Page: int64(page), Size: 15}
 	total, err := models.DB.Where("project_id = ?", project_id).Count(new(models.Tag))
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
-	pagination.Total = int(total)
+	pagination.Total = total
 
 	results := make([]*models.Tag, 0)
 	sql := "select * from tag where project_id = ? order by paixu desc, id desc limit ? offset ?"
 	err = models.DB.SQL(sql, project_id, pagination.Size, pagination.GetOffset()).Find(&results)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
@@ -62,7 +59,7 @@ func (x *Tag) InProject(ctx *gin.Context) {
 	h["page"] = pagination
 	h["project"] = project
 
-	HTML(ctx, "tags.html", nil)
+	utils.HTML(ctx, "tags.html", nil)
 }
 
 func (x *Tag) Modify(ctx *gin.Context) {
@@ -79,12 +76,12 @@ func (x *Tag) Modify(ctx *gin.Context) {
 	h := ctx.MustGet("templateData").(map[string]any)
 	h["tag"] = tag
 
-	Dialog(ctx, "tag-edit.html", nil)
+	utils.Dialog(ctx, "tag-edit.html", nil)
 }
 
 func (x *Tag) Save(ctx *gin.Context) {
 	update := &models.Tag{}
-	if !ShouldBindJSON(ctx, update) {
+	if !utils.ShouldBindJSON(ctx, update) {
 		return
 	}
 
@@ -95,7 +92,7 @@ func (x *Tag) Save(ctx *gin.Context) {
 		_, err = models.DB.InsertOne(update)
 	}
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
@@ -114,19 +111,19 @@ func (x *Tag) Delete(ctx *gin.Context) {
 }
 
 type TaskStats struct {
-	Xid    int
+	Xid    int64
 	Count  int
 	Status int
 }
 
 type TaskStatsResult struct {
-	Id    int         `json:"id"`
+	Id    int64       `json:"id"`
 	Col   string      `json:"col"`
 	Name  string      `json:"name"`
 	Value map[int]int `json:"value"`
 }
 
-func (x *TaskStatsResult) New(id int, col, name string) *TaskStatsResult {
+func (x *TaskStatsResult) New(id int64, col, name string) *TaskStatsResult {
 	return &TaskStatsResult{
 		Id:    id,
 		Col:   col,
@@ -150,17 +147,17 @@ func (x *Tag) Stats(ctx *gin.Context) {
 	sql := "select leader_dept as xid, status, count(id) as count from task where tag = ? group by leader_dept, status order by xid "
 	err := models.DB.SQL(sql, tagId).Find(&results)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	xTaskStatsResult := &TaskStatsResult{}
 	r := make([]*TaskStatsResult, 0)
 
-	total := xTaskStatsResult.New(int(tagId), "tag", "总数")
+	total := xTaskStatsResult.New(int64(tagId), "tag", "总数")
 	r = append(r, total)
 
-	departmentStats := make(map[int]*TaskStatsResult)
+	departmentStats := make(map[int64]*TaskStatsResult)
 	for _, v := range results {
 		ele, ok := departmentStats[v.Xid]
 		if !ok {
@@ -175,17 +172,17 @@ func (x *Tag) Stats(ctx *gin.Context) {
 	sql = "select leader as xid, status, count(id) as count, max(leader_dept) as leader_dept from task where tag = ? group by leader, status order by leader_dept "
 	err = models.DB.SQL(sql, tagId).Find(&results)
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
 	users, err := models.GetUsers()
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 
-	leaderStats := make(map[int]*TaskStatsResult)
+	leaderStats := make(map[int64]*TaskStatsResult)
 	for _, v := range results {
 		ele, ok := leaderStats[v.Xid]
 		if !ok {
@@ -201,7 +198,7 @@ func (x *Tag) Stats(ctx *gin.Context) {
 	h["stats"] = r
 	h["status"] = models.StatusList
 
-	Dialog(ctx, "tag-stats.html", nil)
+	utils.Dialog(ctx, "tag-stats.html", nil)
 }
 
 type GanttValue struct {
@@ -218,7 +215,7 @@ type Gantt struct {
 	Values []*GanttValue `json:"values"`
 }
 
-var ganttPrioritys = map[int]string{
+var ganttPrioritys = map[int64]string{
 	9:     "bg-secondary'>低",
 	99:    "bg-primary'>中",
 	999:   "bg-warning'>高",
@@ -231,16 +228,16 @@ func (x *Tag) Gantt(ctx *gin.Context) {
 	list := make([]models.Task, 0)
 	err := models.DB.Where("tag = ?", tagId).OrderBy("leader").Find(&list)
 	if err != nil {
-		Error(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
 
-	counts := make(map[int]int)
+	counts := make(map[int64]int)
 	for _, v := range list {
 		counts[v.Leader]++
 	}
 	users := getUsers()
-	userTrue := make(map[int]bool)
+	userTrue := make(map[int64]bool)
 
 	now := time.Now().Unix() //当前时间
 

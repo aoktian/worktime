@@ -1,0 +1,72 @@
+<div class="modal" id="priority-tips" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-xl">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">任务优先级对照表</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+<div class="modal-body" id="edit-project-form">
+
+<div class="alert alert-danger" role="alert">
+为避免优先级失效（优先级通胀），请勿把所有任务都标为“高”或“紧急”。
+</div>
+
+<table class="table table-bordered mt-3 text-center align-middle">
+<thead>
+    <tr>
+        <th width="100">优先级</th>
+        <th width="100">标签</th>
+        <th width="100">P级</th>
+        <th class="text-start">业务场景描述（判定标准）</th>
+        <th class="text-start" width="320">响应要求</th>
+    </tr>
+</thead>
+<tbody>
+<tr>
+    <td>紧急</td>
+    <td>紧急/致命</td>
+    <td>P0</td>
+    <td class="text-start">业务停摆：大面积用户无法使用、支付失败、数据泄露、核心系统宕机。</td>
+    <td class="text-start">立即停下手中所有工作，进入救火状态。</td>
+</tr>
+<tr>
+    <td>高</td>
+    <td>核心严重</td>
+    <td>P1</td>
+    <td class="text-start">功能严重受损：主要功能（如搜索、下单）异常，或影响超过 20% 的用户，无替代方案。</td>
+    <td class="text-start">必须在 24 小时（当日）内解决。</td>
+</tr>
+<tr>
+    <td>中</td>
+    <td>普通/次要</td>
+    <td>P2</td>
+    <td class="text-start">局部异常/常规需求：单个页面报错、次要功能失效、不影响主流程的 Bug 或已排期的业务需求。</td>
+    <td class="text-start">在本周迭代或约定排期内完成。</td>
+</tr>
+<tr>
+    <td>低</td>
+    <td>体验优化</td>
+    <td>P3</td>
+    <td class="text-start">细节改进：文案错别字、UI 微调、建议性优化、不影响使用的性能提升。</td>
+    <td class="text-start">优先级最低，资源空闲时再处理。</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">确定</button>
+</div>
+
+    </div>
+</div>
+</div>
+
+<script type="text/javascript">
+function _task_priority_change(value) {
+    if (value == 99999) {
+        $("#priority-tips").modal('show');
+    }
+}
+</script>

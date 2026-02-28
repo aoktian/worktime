@@ -1,6 +1,7 @@
+// 设置页面最小宽度为1650px
+var bodyWidth = "1650px";
 $(document).ready(function() {
-    // 设置页面最小宽度为1650px
-    document.body.style.minWidth = "1650px";
+    document.body.style.minWidth = bodyWidth;
 });
 
 function showSuccessToast(msg) {
@@ -35,7 +36,7 @@ function handleResponse(r) {
     if (r.errors) {
         $.alert({
             title: '提示信息',
-            content: r.errors.map(error => `<p>${error}</p>`).join(''),
+            content: r.errors.join('<p></p>'),
             type: 'red',
         });
         return false;
@@ -97,13 +98,20 @@ function getFormData(formSelector) {
         const $el = $(this);
         const name = $el.attr('name');
         const type = $el.attr('type');
+        const vtype = $el.attr('vtype');
 
-        let value = $el.val();
         // 类型转换：如果是数字字符串则转换为数字
-        if (type != "password") {
-            if (value !== "" && !isNaN(value) && !isNaN(parseFloat(value))) {
-                value = Number(value);
-            }
+        let value = $el.val();
+        switch (vtype) {
+            case "int":
+                value = parseInt(value);
+                break;
+            case "float":
+                value = parseFloat(value);
+                break;
+            case "date2unix":
+                value = new Date(value).getTime() / 1000;
+                break;
         }
 
         // 处理不同类型的表单元素
@@ -196,7 +204,7 @@ function submitFormAjax(formSelector, options) {
     });
 }
 
-function ajax(url, jsonData, callback) {
+function ajax(url, jsonData, callback, success, error, complete) {
     $.ajax({
         url: url,
         type: "POST",
@@ -205,6 +213,8 @@ function ajax(url, jsonData, callback) {
         dataType: "json",
         cache: false,
         success: function( r ) {
+            if (success != null) {success(r)}
+
             if (!handleResponse(r)) {
                 return;
             }
@@ -218,9 +228,10 @@ function ajax(url, jsonData, callback) {
                 title: '提示信息',
                 content: XMLHttpRequest.responseText,
             });
+            if (error != null) {error(XMLHttpRequest, textStatus, errorThrown)}
         },
-        complete: function (jqXHR, textStatus) {
-        }
+        // complete: function (jqXHR, textStatus) {},
+        complete: complete,
     });
 }
 
@@ -236,9 +247,19 @@ function get_form_values(id, forme ) {
     for (var i = 0; i < els.length; i++) {
         var el = $(els[i]);
         var value = el.val();
+        const vtype = el.attr('vtype');
+
         // 类型转换：如果是数字字符串则转换为数字
-        if (value !== "" && !isNaN(value) && !isNaN(parseFloat(value))) {
-            value = Number(value);
+        switch (vtype) {
+            case "int":
+                value = parseInt(value);
+                break;
+            case "float":
+                value = parseFloat(value);
+                break;
+            case "date2unix":
+                value = new Date(value).getTime() / 1000;
+                break;
         }
         if ( el.prop('type') != "checkbox" || el.prop("checked")) {
             rtn[el.prop("name")] = value

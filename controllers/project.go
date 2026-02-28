@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"webserver/models"
+	"webserver/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,9 +11,9 @@ import (
 type Project struct {
 }
 
-func (x *Project) URLPatterns() []Route {
-	return []Route{
-		{Method: http.MethodGet, Path: "/manage/projects", ResourceFunc: x.List},
+func (x *Project) URLPatterns() []utils.Route {
+	return []utils.Route{
+		{Method: http.MethodGet, Path: "/project/list", ResourceFunc: x.List},
 
 		{Method: http.MethodPost, Path: "project/modify/:id", ResourceFunc: x.Modify},
 		{Method: http.MethodPost, Path: "/project/save", ResourceFunc: x.Save},
@@ -38,7 +39,7 @@ func (x *Project) List(ctx *gin.Context) {
 	h := ctx.MustGet("templateData").(map[string]any)
 	h["projects"] = results
 
-	HTML(ctx, "projects.html", nil)
+	utils.HTML(ctx, "projects.html", nil)
 }
 
 func (x *Project) Modify(ctx *gin.Context) {
@@ -52,12 +53,12 @@ func (x *Project) Modify(ctx *gin.Context) {
 	h := ctx.MustGet("templateData").(map[string]any)
 	h["project"] = project
 
-	Dialog(ctx, "project-edit.html", nil)
+	utils.Dialog(ctx, "project-edit.html", nil)
 }
 
 func (x *Project) Save(ctx *gin.Context) {
 	update := &models.Project{}
-	if !ShouldBindJSON(ctx, update) {
+	if !utils.ShouldBindJSON(ctx, update) {
 		return
 	}
 
@@ -68,7 +69,7 @@ func (x *Project) Save(ctx *gin.Context) {
 		_, err = models.DB.InsertOne(update)
 	}
 	if err != nil {
-		JSONError(ctx, err)
+		utils.JSONError(ctx, err)
 		return
 	}
 

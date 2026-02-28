@@ -45,9 +45,11 @@
         管理中心
     </button>
     <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="/manage/projects">项目管理</a></li>
+        <li><a class="dropdown-item" href="/project/list">项目管理</a></li>
         <hr />
-        <li><a class="dropdown-item" href="/manage/users">成员管理</a></li>
+        <li><a class="dropdown-item" href="/user/list">成员管理</a></li>
+        <hr />
+        <li><a class="dropdown-item" href="javascript:ajax('/permission/modify', {});">权限管理</a></li>
     </ul>
 </li>
 

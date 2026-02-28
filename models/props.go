@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -8,48 +9,54 @@ import (
 )
 
 // HasId 接口定义了一个 GetId 方法，用于获取 Id 字段的值
-type HasId interface {
-	GetId() int
+type IProps interface {
+	GetId() int64
+	GetName() string
 }
 
 type Props struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Id        int64  `json:"id" yaml:"id"`
+	Name      string `json:"name" yaml:"name"`
+	Alias     string `json:"alias" yaml:"alias"`
+	ShortName string `json:"short_name" yaml:"short_name"`
 }
 
-func (p *Props) GetId() int {
-	return p.Id
-}
+func (x *Props) GetId() int64    { return x.Id }
+func (x *Props) GetName() string { return x.Name }
 
 var CatyList = []*Props{}
 var StatusList = []*Props{}
 var PriorityList = []*Props{}
 var DepartmentList = []*Props{}
 
-var CatyDict = map[int]*Props{}
-var StatusDict = map[int]*Props{}
-var PriorityDict = map[int]*Props{}
-var DepartmentDict = map[int]*Props{}
+var CatyDict = map[int64]*Props{}
+var StatusDict = map[int64]*Props{}
+var PriorityDict = map[int64]*Props{}
+var DepartmentDict = map[int64]*Props{}
 
-func (props *Props) InitFromConf() {
-	props.loadYAML("conf/caty.yaml", &CatyList)
-	props.loadYAML("conf/status.yaml", &StatusList)
-	props.loadYAML("conf/priority.yaml", &PriorityList)
-	props.loadYAML("conf/department.yaml", &DepartmentList)
+func init() {
+	loadPropsYAML("conf/caty.yaml", &CatyList)
+	loadPropsYAML("conf/status.yaml", &StatusList)
+	sss, _ := json.Marshal(StatusList)
+	fmt.Println(string(sss))
+	loadPropsYAML("conf/priority.yaml", &PriorityList)
+	loadPropsYAML("conf/department.yaml", &DepartmentList)
 
-	props.fillDict(CatyList, &CatyDict)
-	props.fillDict(StatusList, &StatusDict)
-	props.fillDict(PriorityList, &PriorityDict)
-	props.fillDict(DepartmentList, &DepartmentDict)
+	propsFillDict(CatyList, CatyDict)
+	propsFillDict(StatusList, StatusDict)
+	propsFillDict(PriorityList, PriorityDict)
+	propsFillDict(DepartmentList, DepartmentDict)
 }
 
-func (props *Props) fillDict(list []*Props, dict *map[int]*Props) {
+// 泛型方法实现
+func propsFillDict[T IProps](list []T, dict map[int64]T) {
 	for _, v := range list {
-		(*dict)[v.Id] = v
+		id := v.GetId()
+		dict[id] = v
 	}
 }
 
-func (props *Props) loadYAML(filePath string, target interface{}) {
+func loadPropsYAML(filePath string, target interface{}) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		panic(fmt.Sprintf("failed to read file %s: %v", filePath, err))
@@ -59,10 +66,10 @@ func (props *Props) loadYAML(filePath string, target interface{}) {
 	}
 }
 
-func (props *Props) GetName(id int, dict *map[int]*Props) string {
-	props, ok := (*dict)[id]
+func GetPropsName[T IProps](id int64, dict map[int64]T) string {
+	item, ok := dict[id]
 	if ok {
-		return props.Name
+		return item.GetName()
 	}
 	return ""
 }

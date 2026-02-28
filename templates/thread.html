@@ -85,98 +85,8 @@
 </div></div>
 
 <div class="col-12"><div class="input-group">
-    <div class="input-group-text">时间</div>
-    <input value="{{.task.StartAt | unixToDay}}" type="date" class="form-control" name="start_at" />
-    <input value="{{.task.EndAt | unixToDay}}" type="date" class="form-control" name="end_at" />
-</div></div>
 
-    </div>
-
-    <div class="row row-cols-lg-auto g-3 align-items-center mt-2">
-        <div class="col-12">
-
-<div class="input-group">
-    <select itag="val" name="project"
-        class="form-select"
-        value="{{.task.Project}}"
-        onchange="onChangePro( this.value, '#filterTags' );"
-    >
-{{template "selection_map.html" (dict "values" .projects "selected" .task.Project) }}
-    </select>
-    <select id="filterTags" itag="val" name="tag"
-        class="form-select"
-        value="{{.task.Tag}}"
-    >
-{{template "selection_tag.html" (dict "values" .orderedTags "selected" .task.Tag "filterId" .task.Project) }}
-    </select>
-</div>
-
-        </div>
-
-        <div class="col-12">
-
-<div class="input-group">
-    <div class="input-group-text">执行</div>
-    <select itag="val" name="leader_dept"
-        class="form-select"
-        value="{{.task.LeaderDept}}"
-        onchange="onChangeDepartment( this.value, '#filterLeader' );"
-    >
-{{template "selection_map.html" (dict "values" .props.department "selected" .task.LeaderDept) }}
-    </select>
-    <select id="filterLeader" itag="val" name="leader"
-        class="form-select"
-        value="{{.task.Leader}}"
-    >
-{{template "selection_user.html" (dict "values" .users "selected" .task.Leader "filterId" .task.LeaderDept) }}
-    </select>
-</div>
-
-        </div>
-
-        <div class="col-12">
-
-<div class="input-group">
-    <div class="input-group-text">验收</div>
-    <select itag="val" name="checker_dept"
-        class="form-select"
-        value="{{.task.CheckerDept}}"
-        onchange="onChangeDepartment( this.value, '#filterChecker' );"
-    >
-{{template "selection_map.html" (dict "values" .props.department "selected" .task.CheckerDept) }}
-    </select>
-    <select id="filterChecker" itag="val" name="checker"
-        class="form-select"
-        value="{{.task.Checker}}"
-    >
-{{template "selection_user.html" (dict "values" .users "selected" .task.Checker "filterId" .task.CheckerDept) }}
-    </select>
-</div>
-
-        </div>
-
-<div class="col-12"><div class="input-group">
-    <div class="input-group-text">品控</div>
-    <select itag="val" name="tester_dept"
-        class="form-select"
-        value="{{.task.TesterDept}}"
-        onchange="onChangeDepartment( this.value, '#filterTester' );"
-    >
-{{template "selection_map.html" (dict "values" .props.department "selected" .task.TesterDept) }}
-    </select>
-    <select id="filterTester" itag="val" name="tester"
-        class="form-select"
-        value="{{.task.Tester}}"
-    >
-{{template "selection_user.html" (dict "values" .users "selected" .task.Tester "filterId" .task.TesterDept) }}
-    </select>
-
-</div></div>
-
-
-<div class="col-12"><div class="input-group">
-
-<select  itag="val" name="caty"
+<select  vtype="int" itag="val" name="caty"
     class="form-select"
     value="{{.task.Caty}}"
 >
@@ -186,26 +96,112 @@
 </div></div>
 
 <div class="col-12"><div class="input-group">
+<select vtype="int" itag="val" name="priority"
+    class="form-select"
+    value="{{.task.Priority}}"
+    onchange="_task_priority_change(this.value)"
+>
+{{template "selection_map.html" (dict "values" .props.priority "selected" .task.Priority) }}
+</select>
+<input vtype="int" type="number" class="form-control" itag="val" name="level" value="{{.task.Level}}" />
+</div></div>
 
-<select itag="val" name="status"
+
+
+    </div>
+
+<div class="row row-cols-lg-auto g-3 align-items-center mt-2">
+
+<div class="col-12"><div class="input-group">
+    <select vtype="int" itag="val" name="project"
+        class="form-select"
+        value="{{.task.Project}}"
+        onchange="onChangePro( this.value, '#filterTags' );"
+    >
+{{template "selection_map.html" (dict "values" .projects "selected" .task.Project) }}
+    </select>
+    <select vtype="int" id="filterTags" itag="val" name="tag"
+        class="form-select"
+        value="{{.task.Tag}}"
+    >
+{{template "selection_tag.html" (dict "values" .orderedTags "selected" .task.Tag "filterId" .task.Project) }}
+    </select>
+
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <div class="input-group-text">执行</div>
+    <select vtype="int" itag="val" name="leader_dept"
+        class="form-select"
+        value="{{.task.LeaderDept}}"
+        onchange="onChangeDepartment( this.value, '#filterLeader' );"
+    >
+{{template "selection_map.html" (dict "values" .props.department "selected" .task.LeaderDept) }}
+    </select>
+    <select vtype="int" id="filterLeader" itag="val" name="leader"
+        class="form-select"
+        value="{{.task.Leader}}"
+    >
+{{template "selection_user.html" (dict "values" .orderedUsers "selected" .task.Leader "filterId" .task.LeaderDept) }}
+    </select>
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <div class="input-group-text">验收</div>
+    <select vtype="int" itag="val" name="checker_dept"
+        class="form-select"
+        value="{{.task.CheckerDept}}"
+        onchange="onChangeDepartment( this.value, '#filterChecker' );"
+    >
+    <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .task.CheckerDept) }}
+    </select>
+    <select vtype="int" id="filterChecker" itag="val" name="checker"
+        class="form-select"
+        value="{{.task.Checker}}"
+    >
+{{template "selection_user.html" (dict "values" .orderedUsers "selected" .task.Checker "filterId" .task.CheckerDept) }}
+    </select>
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <div class="input-group-text">测试</div>
+    <select vtype="int" itag="val" name="tester_dept"
+        class="form-select"
+        value="{{.task.TesterDept}}"
+        onchange="onChangeDepartment( this.value, '#filterTester' );"
+    >
+    <option value="0">部门</option>
+{{template "selection_map.html" (dict "values" .props.department "selected" .task.TesterDept) }}
+    </select>
+    <select vtype="int" id="filterTester" itag="val" name="tester"
+        class="form-select"
+        value="{{.task.Tester}}"
+    >
+{{template "selection_user.html" (dict "values" .orderedUsers "selected" .task.Tester "filterId" .task.TesterDept) }}
+    </select>
+
+</div></div>
+
+</div>
+
+<div class="row row-cols-lg-auto g-3 align-items-center mt-2">
+
+<div class="col-12"><div class="input-group">
+    <div class="input-group-text">时间</div>
+    <input vtype="date2unix" value="{{.task.StartAt | unixToDay}}" type="date" class="form-control" name="start_at" />
+    <input vtype="date2unix" value="{{.task.EndAt | unixToDay}}" type="date" class="form-control" name="end_at" />
+    <input vtype="date2unix" value="{{.task.ActualAt | unixToDay}}" type="date" class="form-control" name="actual_at" />
+</div></div>
+
+<div class="col-12"><div class="input-group">
+<select vtype="int" itag="val" name="status"
     class="form-select"
     value="{{.task.Status}}"
 >
 {{template "selection_map.html" (dict "values" .props.status "selected" .task.Status) }}
 </select>
-
-</div></div>
-
-<div class="col-12"><div class="input-group">
-<select itag="val" name="priority"
-    class="form-select"
-    value="{{.task.Priority}}"
->
-{{template "selection_map.html" (dict "values" .props.priority "selected" .task.Priority) }}
-</select>
-<input type="text" class="form-control" itag="val" name="level" value="{{.task.Level}}" />
-
-
+<span class="input-group-text" onclick="$('#modal-status-tips').modal('show')"><i class="fa-solid fa-circle-question"></i></span>
 </div></div>
 
 <div class="col-12">
@@ -214,9 +210,8 @@
 </button>
 </div>
 
+</div>
 
-
-    </div>
 
     <div class="edit-buttons mt-3" style="display: none;">
 <button class="btn btn-danger" onclick="_fast_modify()">
@@ -262,18 +257,18 @@
 <hr id="new-comment-anchor">
 
 <blockquote><p class="text-primary">在下面提交完成情况、测试反馈、其他意见......</p></blockquote>
-<form id="new-comment-form" method="POST" action="/comment/save" onsubmit="return false;">
-<input type="hidden" name="task_id" value="{{.task.Id}}">
+<div id="new-comment-form">
+<input vtype="int" type="hidden" name="task_id" value="{{.task.Id}}">
 
 <textarea id="new-comment-editor" name="content"></textarea>
 <div class="mt-3"></div>
 <div class="d-grid">
-<button type="button" class="btn btn-danger btn-lg" onclick="_commit_new_comment('#new-comment-form', '#new-comment-editor')">
+<button type="button" class="btn btn-danger btn-lg" onclick="_commit_new_comment()">
     <i class="fa-solid fa-floppy-disk"></i> 提交反馈 </button>
 </div>
 
 
-</form>
+</div>
 <!-- 添加反馈 end -->
 
     <div class="mt-3"></div>
@@ -292,8 +287,8 @@
             <p>此行为会将这个单子进行重新关联。原有的关联也会取消。</p>
             <p>输入0表示不做关联。</p>
 
-            <input type="hidden" name="task_id" value="{{.task.Id}}">
-            <input name="related_id" class="form-control form-control-lg" value="0" type="number" />
+            <input vtype="int" type="hidden" name="task_id" value="{{.task.Id}}">
+            <input vtype="int" name="related_id" class="form-control form-control-lg" value="0" type="number" />
 
         </div>
         <div class="modal-footer">
@@ -307,6 +302,8 @@
 
 
 {{template "footer.html" .}}
+{{template "help-status.html"}}
+{{template "priority-tips.html"}}
 
 <script type="text/javascript">
 var users = {{.users | json}};
@@ -326,37 +323,33 @@ function _related_to() {
     })
 }
 
-function _commit_new_comment( formid, editorid ) {
-    var c = $(editorid).summernote( 'code' );
-
-    if (c == '') {
+function _commit_new_comment( ) {
+    const editorid = "#new-comment-editor"
+    var jsonData = getFormData('#new-comment-form');
+    if ($(editorid).val() == '') {
+        showErrorToast('请输入反馈内容')
+        return;
+    }
+    if (jsonData.content == '') {
         showErrorToast('请输入反馈内容')
         return;
     }
 
-    if (c.indexOf("data:image/png;base64") >= 0) {
+    if (jsonData.content.indexOf("data:image/png;base64") >= 0) {
         showErrorToast('不正确的图片格式，不要从word、有道等软件中直接粘贴过来，建议使用ctl+shift+v');
-        return false;
+        return ;
     }
 
-    if (c.indexOf('yne-bulb-block') >= 0) {
+    if (jsonData.content.indexOf('yne-bulb-block') >= 0) {
         showErrorToast('不要从word、有道等软件中直接粘贴过来，使用ctl+shift+v')
-        return false;
+        return ;
     }
 
-    submitFormAjax(formid, {
-        success: function(r) {
-            if (!handleResponse(r)) {
-                return;
-            }
-
-            $('#comments').append(r.content);
-            $(editorid).summernote('reset');
-            $('#dialog').modal('hide');
-        }
-    });
-
-    return true;
+    ajax("/comment/save", jsonData, function(r) {
+        showSuccessToast('提交成功')
+        $('#comments').append(r.content);
+        $(editorid).summernote('reset');
+    })
 }
 
 function _set_related() {
@@ -378,8 +371,6 @@ function _modify_task() {
 
 function _fast_modify() {
     var jsonData = getFormData("#task-modify-form");
-    jsonData.start_at = new Date(jsonData.start_at).getTime() / 1000;
-    jsonData.end_at = new Date(jsonData.end_at).getTime() / 1000;
 
     if (_status_modify_task) {
         var markup = $('#task-content').summernote('code');
@@ -480,5 +471,5 @@ function _commit_comment(id) {
 }
 </script>
 
-
 </body></html>
+

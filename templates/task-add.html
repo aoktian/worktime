@@ -32,10 +32,11 @@
 
 
 <div class="container-fluid" id="task-add-form">
-<input type="hidden" name="pid" value="{{.task.Id}}" />
+<input vtype="int" type="hidden" name="pid" value="{{.task.Id}}" />
 
 <div id="taskfilter">
-    <div class="row row-cols-lg-auto g-3 align-items-center mb-2">
+
+<div class="row row-cols-lg-auto g-3 align-items-center mb-2">
 
 <div class="col-12"><div class="input-group">
   <span class="input-group-text">标题</span>
@@ -44,7 +45,7 @@
 
 <div class="col-12"><div class="input-group">
 
-<select  itag="val" name="caty"
+<select vtype="int"  itag="val" name="caty"
     class="form-select"
     value="{{.task.Caty}}"
 >
@@ -55,36 +56,23 @@
 </div></div>
 
 <div class="col-12"><div class="input-group">
-<!-- 创建新任务 默认状态是12 -->
-<select itag="val" name="status"
-    class="form-select"
-    value="{{.task.Status}}"
->
-    <option value="0">状态</option>
-{{template "selection_map.html" (dict "values" .props.status "selected" 12) }}
-</select>
-
-</div></div>
-
-<div class="col-12"><div class="input-group">
-<select itag="val" name="priority"
+<select vtype="int" itag="val" name="priority"
     class="form-select"
     value="{{.task.Priority}}"
+    onchange="_task_priority_change(this.value)"
 >
     <option value="0">优先级</option>
 {{template "selection_map.html" (dict "values" .props.priority "selected" .task.Priority) }}
 </select>
-<input type="text" class="form-control" itag="val" name="level" value="{{.task.Level}}" />
+<input vtype="int" type="number" class="form-control" itag="val" name="level" value="{{.task.Level}}" />
 
 </div></div>
 
-    </div>
+</div>
+<div class="row row-cols-lg-auto g-3 align-items-center mb-2">
 
-    <div class="row row-cols-lg-auto g-3 align-items-center">
-        <div class="col-12">
-
-<div class="input-group">
-    <select itag="val" name="project"
+<div class="col-12"><div class="input-group">
+    <select vtype="int" itag="val" name="project"
         class="form-select"
         value="{{.task.Project}}"
         onchange="onChangePro( this.value, '#filterTags', '版本' );"
@@ -92,23 +80,19 @@
         <option value="0">项目</option>
 {{template "selection_map.html" (dict "values" .projects "selected" .task.Project) }}
     </select>
-    <select id="filterTags" itag="val" name="tag"
+    <select vtype="int" id="filterTags" itag="val" name="tag"
         class="form-select"
         value="{{.task.Tag}}"
     >
         <option value="0">版本</option>
 {{template "selection_tag.html" (dict "values" .tags "selected" .task.Tag "filterId" .task.Project) }}
     </select>
-</div>
+</div></div>
 
-        </div>
-
-        <div class="col-12">
-
-<div class="input-group">
+<div class="col-12"><div class="input-group">
     <!-- 创建新任务，必须选择手动选择部门 复制的任务也需要手动选择部门-->
     <div class="input-group-text">执行</div>
-    <select itag="val" name="leader_dept"
+    <select vtype="int" itag="val" name="leader_dept"
         class="form-select"
         value="0"
         onchange="onChangeDepartment( this.value, '#filterLeader', '成员' );"
@@ -116,64 +100,69 @@
         <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
     </select>
-    <select id="filterLeader" itag="val" name="leader"
+    <select vtype="int" id="filterLeader" itag="val" name="leader"
         class="form-select"
         value="0"
     >
         <option value="0">成员</option>
 {{template "selection_user.html" (dict "values" .users "selected" 0 "filterId" 0) }}
     </select>
-</div>
+</div></div>
 
-        </div>
-
-        <div class="col-12">
-
-<div class="input-group">
+<div class="col-12"><div class="input-group">
     <div class="input-group-text">验收</div>
-    <select itag="val" name="checker_dept"
+    <select vtype="int" itag="val" name="checker_dept"
         class="form-select"
-        value="{{.task.CheckerDept}}"
         onchange="onChangeDepartment( this.value, '#filterChecker', '成员' );"
     >
         <option value="0">部门</option>
-{{template "selection_map.html" (dict "values" .props.department "selected" .task.CheckerDept) }}
+{{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
     </select>
-    <select id="filterChecker" itag="val" name="checker"
+    <select vtype="int" id="filterChecker" itag="val" name="checker"
         class="form-select"
-        value="{{.task.Checker}}"
     >
         <option value="0">成员</option>
-{{template "selection_user.html" (dict "values" .users "selected" .task.Checker "filterId" .task.CheckerDept) }}
     </select>
-</div>
-
-        </div>
+</div></div>
 
 <div class="col-12"><div class="input-group">
-    <div class="input-group-text">品控</div>
-    <select itag="val" name="tester_dept"
+    <div class="input-group-text">测试</div>
+    <select vtype="int" itag="val" name="tester_dept"
         class="form-select"
-        value="{{.task.TesterDept}}"
         onchange="onChangeDepartment( this.value, '#filterTester', '成员' );"
     >
         <option value="0">部门</option>
-{{template "selection_map.html" (dict "values" .props.department "selected" .task.TesterDept) }}
+{{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
     </select>
-    <select id="filterTester" itag="val" name="tester"
+    <select vtype="int" id="filterTester" itag="val" name="tester"
         class="form-select"
         value="{{.task.Tester}}"
     >
         <option value="0">成员</option>
-{{template "selection_user.html" (dict "values" .users "selected" .task.Tester "filterId" .task.TesterDept) }}
     </select>
 
 </div></div>
 
+</div>
+<div class="row row-cols-lg-auto g-3 align-items-center">
+
 <div class="col-12"><div class="input-group">
     <div class="input-group-text">时间</div>
-    <input value="{{.task.StartAt | unixToDay}}" type="date" class="form-control" name="start_at" />
-    <input value="{{.task.EndAt | unixToDay}}" type="date" class="form-control" name="end_at" />
+    <input vtype="date2unix" value="{{.task.StartAt | unixToDay}}" type="date" class="form-control" name="start_at" />
+    <input vtype="date2unix" value="{{.task.EndAt | unixToDay}}" type="date" class="form-control" name="end_at" />
+    <input vtype="date2unix" value="{{.task.ActualAt | unixToDay}}" type="date" class="form-control" name="actual_at" />
+</div></div>
+
+<div class="col-12"><div class="input-group">
+<!-- 创建新任务 默认状态是300 -->
+<select vtype="int" itag="val" name="status"
+    class="form-select"
+    value="{{.task.Status}}"
+>
+    <option value="0">状态</option>
+{{template "selection_map.html" (dict "values" .props.status "selected" 300) }}
+</select>
+<span class="input-group-text" onclick="$('#modal-status-tips').modal('show')"><i class="fa-solid fa-circle-question"></i></span>
 </div></div>
 
     </div>
@@ -181,27 +170,7 @@
 <!-- 快速修改 -->
 
         <hr />
-{{if eq .task.Content ""}}
-<textarea id="task-content" name="content"><p>【问题描述】</p>
-<p>详细描述 需求/BUG 的具体情况，包括：</p>
-<p>1. 什么情况下出现该问题</p>
-<p>2. 具体的操作步骤</p>
-<p>3. 实际结果</p>
-<p>4. 预期结果</p>
-<p><br></p>
-<p>【复现步骤】</p>
-<p>1. 进入...页面</p>
-<p>2. 点击...按钮</p>
-<p>3. 输入...信息</p>
-<p>4. 观察到...现象</p>
-<p><br></p>
-<p>【截图或视频】</p>
-<p>（可在此处上传问题截图或录屏）</p>
-<p><br></p><p>【附加信息】</p>
-<p>其他可能有助于问题排查的信息</p></textarea>
-{{else}}
 <textarea id="task-content" name="content">{{.task.Content|html}}</textarea>
-{{end}}
 
 
 <div class="mt-3"></div>
@@ -214,6 +183,9 @@
 
 
 {{template "footer.html" .}}
+
+{{template "priority-tips.html"}}
+{{template "help-status.html"}}
 
 <script type="text/javascript">
 var users = {{.users | json}};
@@ -236,8 +208,6 @@ function _save() {
     }, 5000);
 
     var data = getFormData("#task-add-form")
-    data.start_at = new Date(data.start_at).getTime() / 1000;
-    data.end_at = new Date(data.end_at).getTime() / 1000;
 
     if (data.start_at > data.end_at) {
         return showErrorToast("开始时间不能大于结束时间")
@@ -257,10 +227,18 @@ function _save() {
         return showErrorToast('不要从word、有道等软件中直接粘贴过来，使用ctl+shift+v')
     }
 
-    if (data.title.length < 10) {
+    const titleCharCount = Array.from(data.title).length;
+    if (titleCharCount < 10) {
         return $.alert({
             title: '提示信息',
             content: "<p>标题字数不少于10字。</p><p>优秀示例：【一级模块】“二级模块”简要描述</p>",
+            type: 'red',
+        });
+    }
+    if (titleCharCount > 50) {
+        return $.alert({
+            title: '提示信息',
+            content: "<p>标题字数太长，请在内容里详细描述。</p>",
             type: 'red',
         });
     }
@@ -274,12 +252,7 @@ function _save() {
     if (data.leader == 0) {
         return showErrorToast("请选择执行成员")
     }
-    if (data.checker == 0) {
-        return showErrorToast("请选择验收成员")
-    }
-    if (data.tester == 0) {
-        return showErrorToast("请选择品控成员")
-    }
+
     if (data.caty == 0) {
         return showErrorToast("请选择类型")
     }
@@ -299,3 +272,4 @@ function _save() {
 
 
 </body></html>
+

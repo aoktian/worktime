@@ -2,7 +2,7 @@
 
 <div class="input-group">
 <select
-itag="val" name="project"
+itag="val" vtype="int" name="project"
 class="form-select"
 value="0"
 onchange="onChangePro( this.value, '#batchModifyTags', '版本' );"
@@ -13,7 +13,7 @@ onchange="onChangePro( this.value, '#batchModifyTags', '版本' );"
 <select id="batchModifyTags"
 class="form-select"
 value="0"
-itag="val" name="tag"
+itag="val" vtype="int" name="tag"
 >
 <option value="0">版本</option>
 </select>
@@ -25,7 +25,7 @@ itag="val" name="tag"
 
 <div class="input-group">
 <div class="input-group-text">执行</div>
-<select itag="val" name="leader_dept"
+<select itag="val" vtype="int" name="leader_dept"
 class="form-select"
 value="0"
 onchange="onChangeDepartment( this.value, '#batchModifyLeader', '成员' );"
@@ -35,7 +35,7 @@ onchange="onChangeDepartment( this.value, '#batchModifyLeader', '成员' );"
 </select>
 <select id="batchModifyLeader"
 class="form-select"
-itag="val" name="leader"
+itag="val" vtype="int" name="leader"
 value="0"
 >
 <option value="0">成员</option>
@@ -48,7 +48,7 @@ value="0"
 
 <div class="input-group">
 <div class="input-group-text">验收</div>
-<select itag="val" name="checker_dept"
+<select itag="val" vtype="int" name="checker_dept"
 class="form-select"
 value="0"
 onchange="onChangeDepartment( this.value, '#batchModifyChecker', '成员' );"
@@ -58,7 +58,7 @@ onchange="onChangeDepartment( this.value, '#batchModifyChecker', '成员' );"
 </select>
 <select id="batchModifyChecker"
 class="form-select"
-itag="val" name="checker"
+itag="val" vtype="int" name="checker"
 >
 <option value="0">成员</option>
 </select>
@@ -69,9 +69,8 @@ itag="val" name="checker"
 <div class="col-12">
 <div class="input-group">
 <div class="input-group-text">品控</div>
-<select itag="val" name="search[pro]"
+<select itag="val" vtype="int" name="tester_dept"
 class="form-select"
-itag="val" name="tester_dept"
 onchange="onChangeDepartment( this.value, '#batchModifyTester', '成员' );"
 >
 <option value="0">部门</option>
@@ -79,7 +78,7 @@ onchange="onChangeDepartment( this.value, '#batchModifyTester', '成员' );"
 </select>
 <select id="batchModifyTester"
 class="form-select"
-itag="val" name="tester"
+itag="val" vtype="int" name="tester"
 >
 <option value="0">成员</option>
 </select>
@@ -91,7 +90,7 @@ itag="val" name="tester"
 <select
 class="form-select"
 value="0"
-itag="val" name="caty"
+itag="val" vtype="int" name="caty"
 >
 <option value="0">类型</option>
 {{template "selection_map.html" (dict "values" .props.caty "selected" 0) }}
@@ -104,7 +103,7 @@ itag="val" name="caty"
 <select
 class="form-select"
 value="0"
-itag="val" name="status"
+itag="val" vtype="int" name="status"
 >
 <option value="0">状态</option>
 {{template "selection_map.html" (dict "values" .props.status "selected" 0) }}
@@ -116,11 +115,11 @@ itag="val" name="status"
 <select
 class="form-select"
 value="0"
-itag="val" name="priority"
+itag="val" vtype="int" name="priority"
 >
 <option value="0">优先级</option>
 {{template "selection_map.html" (dict "values" .props.priority "selected" 0) }}
 </select>
-<input type="text" class="form-control" itag="val" name="level" value="0" />
+<input type="text" class="form-control" itag="val" vtype="int" name="level" value="0" />
 
 </div></div>
