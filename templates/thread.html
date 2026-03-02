@@ -226,9 +226,7 @@
 
 
         <hr />
-<div id="task-content" style="min-height: 150px;">{{.task.Content|html}}</div>
-
-
+<div id="task-content">{{.task.Content|html}}</div>
 
     </div><!-- card-body -->
 
@@ -242,6 +240,21 @@
 </div>
 
 </div>
+
+{{if gt .task.Pid  0}}
+<div class="card mt-3">
+<div class="card-header">
+    <span class="badge text-bg-warning">主任务<b> <a target="_blank" href="/task/thread/{{.parent.Id}}">#{{.parent.Id}} {{.parent.Title}}</a></b></span>
+</div>
+
+<div class="card-body">
+{{.parent.Content|html}}
+</div>
+
+</div>
+{{end}}
+
+
 
 
 <!-- 反馈 -->

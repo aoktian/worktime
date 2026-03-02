@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"log"
 	"strings"
 	"webserver/utils"
 
@@ -14,16 +13,15 @@ type User struct {
 	Account    string `json:"account" xorm:"notnull unique comment('账号')"`
 	Name       string `json:"name" xorm:"notnull unique comment('姓名')"`
 	Nick       string `json:"nick"`
-	Password   string `json:"-" xorm:"notnull comment('密码')"`
+	Password   string `json:"password" xorm:"notnull comment('密码')"`
 	Department int64  `json:"department" xorm:"notnull comment('部门')"`
 	Team       int    `json:"team" xorm:"notnull comment('用户组')"`
 	IsAdmin    bool   `json:"is_admin" xorm:"tinyint(1) notnull default(0) comment('是否管理员')"`
 	CreatedAt  int64  `json:"created_at" xorm:"notnull comment('创建时间') created"`
 	UpdatedAt  int64  `json:"updated_at" xorm:"notnull comment('更新时间') updated"`
+	Ps         int    `json:"ps"` //权限
 
 	Token string `json:"token" xorm:"-"`
-
-	Ps int `json:"ps"` //权限
 }
 
 func (u *User) SaveUser() error {
@@ -38,13 +36,7 @@ func (u *User) GenerateFromPassword() ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 }
 
-// 使用gorm的hook在保存密码前对密码进行hash
 func (u *User) BeforeInsert() {
-	hashedPassword, err := u.GenerateFromPassword()
-	if err != nil {
-		log.Println(err)
-	}
-	u.Password = string(hashedPassword)
 	u.Account = strings.TrimSpace(u.Account)
 	u.Name = strings.TrimSpace(u.Name)
 }

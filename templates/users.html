@@ -1,5 +1,5 @@
 {{template "header.html" .}}</head><body>
-{{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
+{{template "nav.html" (dict "navtab" "manage" "authUser" .authUser )}}
 
 <div class="container-fluid">
 
@@ -33,8 +33,7 @@
 <td>{{$user.Id}}</td>
 <td>{{$user.Account}}</td>
 <td>
-    {{$user.Name}}{{if $user.IsAdmin}}
-    <span class="badge text-bg-primary">管理员</span>{{end}}
+    {{$user.Name}}
 </td>
 <td>{{(index $.departments $user.Department).Name}}</td>
 <td>{{$user.Team}}</td>

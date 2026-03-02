@@ -48,9 +48,17 @@
         <button type="button" class="btn btn-primary btn-lg" onclick="submitFormAjax('#loginForm');">
             登 入
         </button>
+
     </div>
 
 </form>
+
+<div class="text-center mt-5">
+<button type="button" class="btn btn-link" onclick="ajax('/auth/showregister', {});">
+    注 册
+</button>
+</div>
+
 {{else}}
 {{template "login_feishu.html" .}}
 {{end}}

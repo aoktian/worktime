@@ -75,7 +75,7 @@
 </li>
             </ul>
             <div class="d-flex align-items-center fs-3 pe-3">
-                <i class="fa-solid fa-user"></i><span id="iname">{{.authUser.Name}}</span>
+                <i class="fa-solid fa-user"></i><span id="iname" onclick="ajax('/user/showimodify')">{{.authUser.Name}}</span>
                 <a href="/auth/logout" class="btn btn-link ms-3">退出</a>
             </div>
         </div>

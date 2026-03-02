@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Auth struct {
@@ -19,6 +18,8 @@ func (x *Auth) URLPatterns() []utils.Route {
 		{Method: http.MethodGet, Path: "/test", ResourceFunc: x.Test},
 		{Method: http.MethodGet, Path: "/home", ResourceFunc: x.Home},
 		{Method: http.MethodPost, Path: "/login", ResourceFunc: x.Login},
+		{Method: http.MethodPost, Path: "/showregister", ResourceFunc: x.Register},
+		{Method: http.MethodPost, Path: "/register", ResourceFunc: x.register},
 		{Method: http.MethodGet, Path: "/logout", ResourceFunc: x.Logout},
 	}
 }
@@ -32,10 +33,51 @@ func (x *Auth) Home(c *gin.Context) {
 	c.String(http.StatusOK, "hello world")
 }
 
-// /welcome/login 的请求体
-type ReqLogin struct {
-	Account  string `form:"account" binding:"required"`
-	Password string `form:"password" binding:"required"`
+func (x *Auth) Register(c *gin.Context) {
+	utils.Dialog(c, "user-register.html", gin.H{
+		"departments": models.DepartmentDict,
+	})
+}
+
+func (x *Auth) register(c *gin.Context) {
+	params := &models.User{}
+	if !utils.ShouldBindJSON(c, params) {
+		return
+	}
+
+	if params.Name == "" {
+		utils.JSONErrMsg(c, "姓名不能为空")
+		return
+	}
+	if params.Department == 0 {
+		utils.JSONErrMsg(c, "部门不能为空")
+		return
+	}
+	if params.Password == "" {
+		utils.JSONErrMsg(c, "密码不能为空")
+		return
+	}
+
+	hashedPassword, err := params.GenerateFromPassword()
+	if err != nil {
+		utils.JSONError(c, err)
+		return
+	}
+
+	user := &models.User{
+		Account:    params.Account,
+		Name:       params.Name,
+		Department: params.Department,
+		Nick:       params.Nick,
+		Password:   string(hashedPassword),
+	}
+	_, err = models.DB.InsertOne(user)
+	if err != nil {
+		utils.JSONError(c, err)
+		return
+	}
+
+	utils.JSONMsg(c, "创建成功，请通知管理员开通权限。")
 }
 
 func (x *Auth) Login(c *gin.Context) {
@@ -44,15 +86,14 @@ func (x *Auth) Login(c *gin.Context) {
 		return
 	}
 
-	var req ReqLogin
-	if err := c.ShouldBind(&req); err != nil {
-		utils.JSONError(c, err)
+	params := &models.User{}
+	if !utils.ShouldBindJSON(c, params) {
 		return
 	}
 
 	u := &models.User{}
 
-	has, err := models.DB.Where("account = ?", req.Account).Get(u)
+	has, err := models.DB.Where("account = ?", params.Account).Get(u)
 	if err != nil {
 		utils.JSONError(c, err)
 		return
@@ -62,8 +103,8 @@ func (x *Auth) Login(c *gin.Context) {
 		return
 	}
 
-	err = models.VerifyPassword(req.Password, u.Password)
-	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+	err = models.VerifyPassword(params.Password, u.Password)
+	if err != nil {
 		utils.JSONError(c, err)
 		return
 	}

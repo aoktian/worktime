@@ -23,6 +23,9 @@ func (x *User) URLPatterns() []utils.Route {
 		{Path: "/user/deleteform/:id", ResourceFunc: x.DeleteForm, Method: http.MethodPost},
 		{Path: "/user/delete", ResourceFunc: x.Delete, Method: http.MethodPost},
 
+		{Path: "/user/showimodify", ResourceFunc: x.Imodify, Method: http.MethodPost},
+		{Path: "/user/imodify", ResourceFunc: x.imodify, Method: http.MethodPost},
+
 		{Path: "/permission/modify", ResourceFunc: x.modifyPermission, Method: http.MethodPost},
 	}
 }
@@ -47,6 +50,47 @@ func (x *User) List(ctx *gin.Context) {
 	h["psGroups"] = utils.GetPathPermission().UserGroups
 
 	utils.HTML(ctx, "users.html", nil)
+}
+
+func (x *User) Imodify(ctx *gin.Context) {
+	user := GetAuthUser(ctx)
+	h := ctx.MustGet("templateData").(map[string]any)
+	h["user"] = user
+	h["departments"] = models.DepartmentDict
+	h["psGroups"] = utils.GetPathPermission().UserGroups
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"dialog": utils.GetRenderedTemplateContent(ctx, "user-imodify.html"),
+	})
+}
+
+func (x *User) imodify(c *gin.Context) {
+	params := &models.User{}
+	if !utils.ShouldBindJSON(c, params) {
+		return
+	}
+
+	authUser := GetAuthUser(c)
+
+	user := &models.User{
+		Nick: params.Nick,
+	}
+
+	if params.Password != "" {
+		hashedPassword, err := params.GenerateFromPassword()
+		if err != nil {
+			utils.JSONError(c, err)
+			return
+		}
+		user.Password = string(hashedPassword)
+	}
+
+	_, err := models.DB.ID(authUser.Id).Update(user)
+	if err != nil {
+		utils.JSONError(c, err)
+		return
+	}
+	utils.JSONMsg(c, "修改成功。")
 }
 
 func (x *User) Modify(ctx *gin.Context) {
@@ -82,10 +126,6 @@ func (x *User) Save(ctx *gin.Context) {
 
 	// 保持上下的沟通，故意这么设计
 	authUser := ctx.MustGet("authUser").(*models.User)
-	if !authUser.IsAdmin {
-		utils.JSONErrMsg(ctx, "只有管理员有权限")
-		return
-	}
 
 	if user.Department == 0 {
 		utils.JSONErrMsg(ctx, "部门不能为空")
@@ -197,10 +237,6 @@ func (x *User) DeleteForm(ctx *gin.Context) {
 
 func (x *User) Delete(ctx *gin.Context) {
 	authUser := GetAuthUser(ctx)
-	if !authUser.IsAdmin {
-		utils.JSONError(ctx, errors.New("不是管理员不能删除"))
-		return
-	}
 
 	form := &DelForm{}
 	if !utils.ShouldBindJSON(ctx, form) {

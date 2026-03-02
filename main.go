@@ -10,7 +10,6 @@ import (
 	_ "time/tzdata"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 
 	"webserver/controllers"
 	"webserver/middlewares"
@@ -27,11 +26,8 @@ type cmd struct {
 }
 
 var cmds = map[string]cmd{
-	"start":         {"启动服务", startWebServer},
-	"addUser":       {"添加用户", addUser},
-	"setAdmin":      {"设置管理员", setAdmin},
-	"resetPassword": {"重置密码", resetPassword},
-	"createTables":  {"初始化数据库", createTables},
+	"start":  {"启动服务", startWebServer},
+	"initDb": {"初始化数据库", initDb},
 }
 
 func help() {
@@ -65,136 +61,8 @@ func main() {
 	cmd.run()
 }
 
-func createTables() {
+func initDb() {
 	models.CreateTables()
-}
-
-func addUser() {
-	u := &models.User{}
-
-	for {
-		fmt.Print("请输入登录帐号：")
-		fmt.Scanln(&u.Account)
-
-		has, err := models.DB.Where("account = ?", u.Account).Get(new(models.User))
-		if err != nil {
-			panic(err)
-		}
-		if has {
-			fmt.Println("帐号已存在")
-		} else {
-			break
-		}
-	}
-
-	fmt.Print("请输入登录密码：")
-	fmt.Scanln(&u.Password)
-
-	fmt.Print("请输入姓名或者昵称：")
-	fmt.Scanln(&u.Name)
-
-	fmt.Println("请输入部门编号：")
-	for _, d := range models.DepartmentList {
-		fmt.Printf("%d:%s\n", d.Id, d.Name)
-	}
-	fmt.Scanln(&u.Department)
-
-	fmt.Print("是否是管理员(y/n)：")
-	var isAdmin string
-	fmt.Scanln(&isAdmin)
-	if isAdmin == "y" {
-		u.IsAdmin = true
-	}
-
-	err := u.SaveUser()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	fmt.Println("用户添加成功")
-
-	fmt.Print("是否继续添加用户(y/n)：")
-	var isAdd string
-	fmt.Scanln(&isAdd)
-	if isAdd == "y" {
-		addUser()
-	} else {
-		fmt.Println("已退出")
-	}
-}
-
-func setAdmin() {
-	id := 0
-
-	fmt.Print("请输入ID：")
-	for {
-		fmt.Scanln(&id)
-		has := models.CheckUserExist(id)
-		if !has {
-			fmt.Println("用户不存在，请重新输入：")
-			continue
-		} else {
-			break
-		}
-	}
-
-	fmt.Println("是否管理员？y/n")
-	var isAdmin string
-	fmt.Scanln(&isAdmin)
-
-	is := false
-	if isAdmin == "y" {
-		is = true
-	}
-
-	update := &models.User{IsAdmin: is}
-	affected, err := models.DB.ID(id).MustCols("is_admin").Update(update)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if affected > 0 {
-		fmt.Println("修改成功")
-	} else {
-		fmt.Println("未修改")
-	}
-}
-
-func resetPassword() {
-	id := 0
-
-	fmt.Print("请输入ID：")
-	for {
-		fmt.Scanln(&id)
-		has := models.CheckUserExist(id)
-		if !has {
-			fmt.Println("用户不存在，请重新输入：")
-			continue
-		} else {
-			break
-		}
-	}
-
-	password := utils.RandNumeric(8)
-
-	b, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		panic(err)
-	}
-
-	update := &models.User{Password: string(b)}
-	affected, err := models.DB.ID(id).Update(update)
-
-	if err != nil {
-		panic(err)
-	}
-	if affected > 0 {
-		fmt.Println("修改成功，新密码: ", password)
-	} else {
-		fmt.Println("未修改")
-	}
 }
 
 func startWebServer() {

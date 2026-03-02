@@ -22,6 +22,7 @@
 <ol>
     <li><b>状态，负责人</b> 是必填项。</li>
     <li><b>标题，内容</b> 根据情况自行修改。</li>
+    <li>子任务内容可留空，将继承主任务内容。</li>
 </ol>
 
 </div>
@@ -170,7 +171,8 @@
 <!-- 快速修改 -->
 
         <hr />
-<textarea id="task-content" name="content">{{.task.Content|html}}</textarea>
+
+<textarea id="task-content" name="content"></textarea>
 
 
 <div class="mt-3"></div>
@@ -213,7 +215,8 @@ function _save() {
         return showErrorToast("开始时间不能大于结束时间")
     }
 
-    if (data.content.length < 10) {
+    //子任务不检查
+    if (data.pid == 0 && data.content.length < 10) {
         return $.alert({
             title: '提示信息',
             content: "<p>内容字数太少，不容易描述清楚问题。</p><p><br /></p><p>【问题描述】</p><p>详细描述 需求/BUG 的具体情况，包括：</p> <p>1. 什么情况下出现该问题</p> <p>2. 具体的操作步骤</p> <p>3. 实际结果</p> <p>4. 预期结果</p> <p><br></p> <p>【复现步骤】</p> <p>1. 进入...页面</p> <p>2. 点击...按钮</p> <p>3. 输入...信息</p> <p>4. 观察到...现象</p> <p><br></p> <p>【截图或视频】</p> <p>（可在此处上传问题截图或录屏）</p> <p><br></p><p>【附加信息】</p> <p>其他可能有助于问题排查的信息</p>",

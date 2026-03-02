@@ -348,8 +348,8 @@ func (x *Task) Get(ctx *gin.Context) {
 		searchId = task.Pid
 	}
 
-	result := make([]*models.Task, 0)
-	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&result)
+	results := make([]*models.Task, 0)
+	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&results)
 	if err != nil {
 		utils.JSONError(ctx, err)
 		return
@@ -357,8 +357,14 @@ func (x *Task) Get(ctx *gin.Context) {
 
 	templateData := ctx.MustGet("templateData").(map[string]any)
 	templateData["task"] = task
-	templateData["tasks"] = result
-	templateData["pagination"] = &utils.Pagination{Page: 1, Total: int64(len(result)), Size: 10000}
+	templateData["tasks"] = results
+	if len(results) > 0 {
+		templateData["parent"] = results[0]
+	} else {
+		templateData["parent"] = &models.Task{}
+	}
+
+	templateData["pagination"] = &utils.Pagination{Page: 1, Total: int64(len(results)), Size: 10000}
 
 	orderedTags := make([]*models.Tag, 0)
 	models.DB.OrderBy("paixu desc, id").Find(&orderedTags)
