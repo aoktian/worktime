@@ -14,7 +14,6 @@ import (
 	"webserver/controllers"
 	"webserver/middlewares"
 	"webserver/models"
-	"webserver/templatefuncs"
 	"webserver/utils"
 
 	"github.com/sirupsen/logrus"
@@ -85,14 +84,9 @@ func startWebServer() {
 		c.Abort()
 	}))
 
-	templatefuncs.SetTemplateFuncs(r) //要在load 之前调用
-	r.LoadHTMLGlob("templates/*")
+	loadTemplatesAndStatic(r)
 
 	r.Use(middlewares.EnableCookieSession())
-
-	// 前端项目静态资源
-	r.Static("/static", "./static")
-	r.StaticFile("/worktime.svg", "./static/worktime.svg")
 
 	// 上传的图片
 	r.Static("/upload", utils.AppConfig.Server.UploadDir)

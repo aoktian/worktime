@@ -19,14 +19,16 @@
 </thead>
 <tbody id="tasklist">
 {{range $key, $value := .tasks}}
-<tr class="priority-{{$value.Priority}} status-{{$value.Status}}">
+{{$priority := (index $.props.priority $value.Priority)}}
+{{$status := (index $.props.status $value.Status)}}
+<tr class="priority-{{$priority.Color}} status-{{$status.Color}}">
     <th scope="row">
         <input class="form-check-input" name="task-checkbox" type="checkbox" value="{{$value.Id}}" />
     </th>
     <td>{{$value.ProjectName}}</td>
     <td>{{$value.TagName}}</td>
-    <td>{{(index $.props.status $value.Status).Name}}</td>
-    <td>{{(index $.props.priority $value.Priority).Name}}({{$value.Level}})</td>
+    <td>{{$status.Name}}</td>
+    <td>{{$priority.Name}}({{$value.Level}})</td>
     <td>{{(index $.props.caty $value.Caty).Name}}</td>
     <td class='text-start'>
         <a

@@ -153,9 +153,9 @@
         <input itag="val" name="title"
             type="text"
             class="form-control"
-            placeholder="标题模糊筛选"
+            placeholder="标题模糊或精确ID"
             value="{{$.filter.Title}}"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();_taskList(1);}"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();filter_title(this.value);}"
         />
     </div>
 </div>
@@ -218,6 +218,20 @@
 {{template "footer.html" .}}
 
 <script type="text/javascript">
+bodyWidth = "1850px";
+
+function filter_title(val) {
+    val = val.trim();
+    if (val == "") {
+        return;
+    }
+    const isId = val.match(/^[0-9]+$/);
+    if (isId) {
+        window.open("/task/thread/" + val);
+        return
+    }
+    filter_result(1);
+}
 
 var _page = 1;
 function _taskList( page ) {

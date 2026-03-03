@@ -51,9 +51,11 @@ func (x *User) selector(ctx *gin.Context) {
 	results := make([]*models.User, 0)
 	if params.Keyword == "" {
 		models.DB.Where("department = ? and is_leave = 0", params.ProjectId).
+			OrderBy("team desc").
 			Limit(pageSize, offset).Find(&results)
 	} else {
 		models.DB.Where("department = ? and name like ?", params.ProjectId, "%"+params.Keyword+"%").
+			OrderBy("team desc").
 			Limit(pageSize, offset).Find(&results)
 	}
 

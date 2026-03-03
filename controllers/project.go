@@ -46,10 +46,10 @@ func (x *Project) selector(ctx *gin.Context) {
 
 	results := make([]*models.Project, 0)
 	if params.Keyword == "" {
-		models.DB.Where("is_archived = 0").
+		models.DB.Where("is_archived = 0").OrderBy("paixu desc").
 			Limit(pageSize, offset).Find(&results)
 	} else {
-		models.DB.Where("name like ?", "%"+params.Keyword+"%").
+		models.DB.Where("name like ?", "%"+params.Keyword+"%").OrderBy("paixu desc").
 			Limit(pageSize, offset).Find(&results)
 	}
 
@@ -120,6 +120,7 @@ func (x *Project) list(ctx *gin.Context, con *projectSearch) {
 
 	results := make([]*models.Project, 0)
 	models.DB.Where(sqlWhere, args...).
+		OrderBy("paixu desc, id desc").
 		Limit(int(pagination.Size), int(pagination.GetOffset())).Find(&results)
 
 	h := ctx.MustGet("templateData").(map[string]any)

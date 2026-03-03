@@ -18,31 +18,32 @@
   padding: 0.75rem;
 }
 
-.priority-9 td, .priority-9 a {
+.priority-low td, .priority-low a {
   color: #000;
 }
 
-.priority-99 td, .priority-99 a {
+.priority-middle td, .priority-middle a {
   color: #0d6efd;
 }
 
-.priority-999 td, .priority-999 a {
+.priority-high td, .priority-high a {
   color: #dc3545;
 }
 
-.priority-99999 td, .priority-99999 a {
+.priority-hhigh td, .priority-hhigh a {
   color: #dc3545;
   font-weight: bold;
 }
 
-.status-98 td, .status-98 a {
-  color: #198754 !important;
-  font-weight: normal !important;
-}
-.status-99 td, .status-99 a {
+.status-drop td, .status-drop a {
   color: #6c757d !important;
   font-weight: normal !important;
 }
+.status-done td, .status-done a {
+  color: #198754 !important;
+  font-weight: normal !important;
+}
+
 
 .modal-xxl {
   --bs-modal-width: 1380px;

@@ -1,0 +1,55 @@
+# 用户组权限配置
+user_groups:
+  # 普通用户组
+  0:
+    id: 0
+    name: "游客"
+    description: "无权限"
+    permissions:
+      - "/abc/abc"
+
+  4:
+    id: 4
+    name: "禁言"
+    description: "无权限"
+    permissions:
+      - "/abc/abc"
+
+  # 普通用户组
+  1:
+    id: 1
+    name: "普通"
+    description: "普通用户，基本访问权限"
+    permissions:
+      - "/comment/*"
+      - "/project/*"
+      - "/tag/*"
+      - "/props/*"
+      - "/publish/*"
+      - "/task/*"
+      - "/user/*"
+    black_list:
+      - "/user/delete"
+      - "/tag/save"
+      - "/tag/delete/*"
+      - "/project/save"
+      - "/project/delete/*"
+
+  # 普通用户组
+  10:
+    id: 10
+    name: "高级"
+    description: "普通用户，可编辑"
+    include_groups: [1]
+    permissions:
+      - "/project/*"
+      - "/tag/*"
+      - "/user/*"
+
+  # 超级管理员组 九五至尊
+  95:
+    id: 95
+    name: "超级管理员"
+    description: "九五至尊，所有权限"
+    permissions:
+      - "**/*"  # 所有路径

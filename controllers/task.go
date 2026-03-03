@@ -458,17 +458,17 @@ func (x *Task) NewTask(ctx *gin.Context) {
 func (x *Task) Get(ctx *gin.Context) {
 	taskId := GetParamInt(ctx, "id")
 	if taskId == 0 {
-		utils.JSONErrMsg(ctx, "参数错误")
+		utils.ErrorMsg(ctx, "参数错误")
 		return
 	}
 	task := &models.Task{}
 	has, err := models.DB.Where("id = ?", taskId).Get(task)
 	if err != nil {
-		utils.JSONError(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
 	if !has {
-		utils.JSONErrMsg(ctx, "没有该任务")
+		utils.ErrorMsg(ctx, "没有该任务")
 		return
 	}
 
@@ -478,8 +478,10 @@ func (x *Task) Get(ctx *gin.Context) {
 	}
 
 	results := make([]*listTask, 0)
-	err = models.DB.Table("task").Select("task.*, tag.name as tag_name").
+
+	err = models.DB.Table("task").Select("task.*, tag.name as tag_name, project.name as project_name").
 		Join("LEFT", "tag", "task.tag = tag.id").
+		Join("LEFT", "project", "task.project = project.id").
 		Where("pid = ? or task.id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&results)
 	if err != nil {
 		utils.JSONError(ctx, err)
@@ -617,8 +619,9 @@ func (x *Task) Related(ctx *gin.Context) {
 	}
 
 	tasks := make([]*listTask, 0)
-	err = models.DB.Table("task").Select("task.*, tag.name as tag_name").
-		Join("LEFT", "tag", "tag.id = task.tag").
+	err = models.DB.Table("task").Select("task.*, tag.name as tag_name, project.name as project_name").
+		Join("LEFT", "tag", "task.tag = tag.id").
+		Join("LEFT", "project", "task.project = project.id").
 		Where("pid = ? or task.id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&tasks)
 	if err != nil {
 		utils.JSONError(ctx, err)

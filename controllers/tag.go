@@ -52,9 +52,11 @@ func (x *Tag) selector(ctx *gin.Context) {
 	offset := (params.Page - 1) * pageSize
 	if params.Keyword == "" {
 		models.DB.Where("project_id = ? and is_archived = 0", params.ProjectId).
+			OrderBy("paixu desc").
 			Limit(pageSize, offset).Find(&results)
 	} else {
 		models.DB.Where("project_id = ? and name like ?", params.ProjectId, "%"+params.Keyword+"%").
+			OrderBy("paixu desc").
 			Limit(pageSize, offset).Find(&results)
 	}
 
@@ -137,7 +139,8 @@ func (x *Tag) list(ctx *gin.Context, con *tagSearch) {
 	pagination.Total = total
 
 	results := make([]*models.Tag, 0)
-	err = models.DB.Where(sqlWhere, args...).OrderBy("paixu desc, id desc").
+	err = models.DB.Where(sqlWhere, args...).
+		OrderBy("paixu desc, id desc").
 		Limit(int(pagination.Size), int(pagination.GetOffset())).Find(&results)
 	if err != nil {
 		utils.JSONError(ctx, err)

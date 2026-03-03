@@ -21,46 +21,30 @@
 <table class="table table-striped table-bordered mt-3 text-center align-middle ">
 <thead class="table-light">
     <tr>
-        <th scope="col" width="100">区段</th>
-        <th scope="col" width="100">ID</th>
-        <th scope="col" width="100">名称</th>
-        <th scope="col" width="200">场景</th>
-        <th scope="col" width="200">后续</th>
-        <th scope="col" class="text-start">说明</th>
+        <th width="100">区段</th>
+        <th width="100">ID</th>
+        <th width="100">名称</th>
+        <th class="text-start">说明</th>
     </tr>
 </thead>
 <tbody>
 <tr>
     <th>异常区</th>
     <td>100</td>
-    <td>测试未过</td>
-    <td class="text-start">QA 发现 Bug，任务被打回</td>
-    <td class="text-start">待测试</td>
-    <td class="text-start" rowspan="3">排在最首位，提醒优先处理。</td>
-</tr>
-<tr>
-    <td></td>
-    <td>110</td>
-    <td>评审未过</td>
-    <td class="text-start">提交的需求被驳回</td>
-    <td class="text-start">待评审</td>
-</tr>
-<tr>
-    <td></td>
-    <td>120</td>
-    <td>验收未过</td>
-    <td class="text-start">验收发现不符合需求</td>
-    <td class="text-start">已解决</td>
+    <td>未通过</td>
+    <td class="text-start">
+        <p>总之就是有问题，需要执行人修正。</p>
+        <p>排在最首位，提醒优先处理。</p>
+    </td>
 </tr>
 
 <tr>
     <th>执行区</th>
     <td>200</td>
     <td>正在做</td>
-    <td class="text-start">负责人的自我标记，这个任务我正在做。其实涵盖了方案中、研发中、画图中、动画中、数值中等等正在做的事情。</td>
-    <td></td>
     <td class="text-start">
-<p>1. 任务是需要体现工作量的。</p>
+<p>执行人的自我标记，这个任务我正在做。其实涵盖了方案中、研发中、画图中、动画中、数值中等等正在做的事情。</p>
+<p>1. 任务是需要体现工作量的。其他人可以知道你在干这件事。</p>
 <p>2. 如果一个任务需要多部门，多工种配合，那么需要拆分单子。</p>
 <p>3. 【正在做】配合执行部门、执行人后可以表达出不同的意思。如果是设计部门正在做，那么正在做就是正在做设计；如果是程序员正在做，那么就是正在写代码。</p>
 </td>
@@ -69,64 +53,57 @@
     <td></td>
     <td>220</td>
     <td>挂起</td>
-    <td class="text-start">暂时不能进行下去了</td>
-    <td></td>
     <td class="text-start">
+        <p>暂时不能进行下去了</p>
+        <p>依赖其他任务的完成情况。比如，需要等待策划设计，需要等待美术出图等等
         重点是已经行动了。
 已经行动了一部分，又暂时不能行动，先让他挂起。
-也是一种自我标记，自我管理。
+也是一种自我标记，自我管理。</p>
     </td>
 </tr>
 <tr>
     <td></td>
-    <td>250</td>
-    <td>待做</td>
-    <td class="text-start">负责人的任务队列，待排期。类似于新任务。和新任务这个状态有些重叠。</td>
-    <td></td>
+    <td>230</td>
+    <td>待定</td>
     <td class="text-start">
-        自我管理的标记。
-这个状态对于负责人来说，相当于是新任务。
-等价于 新任务 这个状态
+        <p>待定也是一种完成任务的形式。</p>
+        <p>和挂起很像，但是不一样。如果一直处于待定状态，说明已经不需要处理了。下一步就可以转入完成状态了。</p>
     </td>
 </tr>
 
 <tr>
     <th>初始区</th>
-    <td>300</td>
+    <td>210</td>
     <td>新任务</td>
-    <td class="text-start">单子新建，或者是单子的初始状态。</td>
-    <td></td>
-    <td></td>
-</tr>
-<tr>
-    <td></td>
-    <td>300</td>
-    <td>待评审</td>
-    <td class="text-start">确定需求是否要做；Bug 是否是复现。</td>
-    <td></td>
-    <td></td>
+    <td class="text-start">
+        <p>单子新建，或者是单子的初始状态。</p>
+        给你的任务都是需要去完成的。
+    </td>
 </tr>
 
 <tr>
     <th>交付区</th>
-    <td>500</td>
+    <td>290</td>
     <td>已解决</td>
-    <td class="text-start">就是我自己解决了，完成了。比如程序需要自测完成。美术需要自我观感OK。等等。</td>
-    <td class="text-start">下一个状态是什么取决于任务本身。有多个多种因素影响。比如，我想等其他任务完成后再提测；比如，此任务不需要验收、测试，下一步直接转为完成。等等。</td>
-    <td class="text-start"><p>此状态有多种用途</p>
+    <td class="text-start">
+        <p>就是我自己解决了，完成了。比如程序需要自测完成。美术需要自我观感OK。等等。</p>
+        <p>此状态有多种用途</p>
 <p>1. 留置，留给自己看。</p>
 <p>2. 自我管理。</p>
 <p>3. 无需验收、测试的任务。</p>
 <p>4. 如果任务有验收人，那么当任务状态是已解决时，验收人就应该进行验收了。</p>
-<p>等等。</p></td>
+<p>5. 验收人和测试人都可以关注此状态。</p>
+<p>等等。</p>
+<p>下一个状态是什么取决于任务本身。有多个多种因素影响。比如，我想等其他任务完成后再提测；比如，此任务不需要验收、测试，下一步直接转为完成。等等。</p>
+</td>
 </tr>
 <tr>
     <td></td>
-    <td>550</td>
+    <td>500</td>
     <td>验收中</td>
-    <td class="text-start">确认功能是否符合预期。</td>
-    <td class="text-start">验收未过、待测试</td>
-    <td class="text-start"><p>如果任务需要验收。</p>
+    <td class="text-start">
+        <p>确认功能是否符合预期。</p>
+        <p>如果任务需要验收。</p>
 <p>这个状态需要配合验收人使用。</p>
 <p>此时，代码应该还处于开发仓库。</p>
 <p>当验收通过时，</p>
@@ -135,14 +112,9 @@
 </tr>
 <tr>
     <td></td>
-    <td>555</td>
-    <td>验收通过</td>
-    <td class="text-start">需要就用，不需要就不用。</td>
-    <td></td>
-    <td class="text-start"><p>这是一种中间状态，是否使用这个状态，取决于是否有中间人。</p>
-<p>验收通过和待测试有些重叠。</p>
-<p>如果有验收通过，那么就不太需要待测试。因为验收通过，对于测试人来说，就是待测试。同一个状态对不同的负责人来讲意义不一样。</p>
-</td>
+    <td>510</td>
+    <td>可验收</td>
+    <td class="text-start">验收人可以进行验收了。</td>
 </tr>
 
 
@@ -151,40 +123,28 @@
     <td>600</td>
     <td>测试中</td>
     <td class="text-start">QA 正在执行验证。</td>
-    <td class="text-start" rowspan="2">测试未过、测试通过</td>
-    <td></td>
 </tr>
 <tr>
     <td></td>
-    <td>620</td>
-    <td>待测试</td>
+    <td>610</td>
+    <td>可测试</td>
     <td class="text-start">放入 QA 的测试队列。</td>
-    <td></td>
 </tr>
 <tr>
     <td></td>
-    <td>690</td>
-    <td>测试通过</td>
-    <td class="text-start">准许上线的绿灯信号。
-运维人员应依据此状态进行上线确认。</td>
-    <td></td>
-    <td></td>
+    <td>800</td>
+    <td>已通过</td>
+    <td class="text-start">
+        <p>任务达到了一个可以预期的阶段。</p>
+        <p>准许上线的绿灯信号。
+运维人员应依据此状态进行上线确认。</p>
+    </td>
 </tr>
 
 <tr>
     <th>终结区</th>
-    <td>950</td>
-    <td>已上线</td>
-    <td class="text-start">确认已经上线。是一个动作的确认行为。</td>
-    <td></td>
-    <td></td>
-</tr>
-<tr>
-    <td></td>
     <td>970</td>
     <td>废弃</td>
-    <td class="text-start">任何状态都可以转为废弃。</td>
-    <td class="text-start">完成</td>
     <td class="text-start">
 <p>本质上，废弃不应该是状态。</p>
 <p>废弃是一种解决方案。有可能是对任务方案的修改。也有可能是某种原因导致的放弃。</p>
@@ -196,8 +156,6 @@
     <td></td>
     <td>999</td>
     <td>完成</td>
-    <td>任务结束。</td>
-    <td></td>
     <td class="text-start">
 <ol>
 <li>完成也可以理解为关闭的意思。</li>

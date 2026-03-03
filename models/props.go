@@ -15,23 +15,41 @@ type IProps interface {
 }
 
 type Props struct {
-	Id        int64  `json:"id" yaml:"id"`
-	Name      string `json:"name" yaml:"name"`
-	Alias     string `json:"alias" yaml:"alias"`
-	ShortName string `json:"short_name" yaml:"short_name"`
+	Id        int64  `yaml:"id"`
+	Name      string `yaml:"name"`
+	Alias     string `yaml:"alias"`
+	ShortName string `yaml:"short_name"`
 }
 
 func (x *Props) GetId() int64    { return x.Id }
 func (x *Props) GetName() string { return x.Name }
 
+type Priority struct {
+	Id    int64  `yaml:"id"`
+	Name  string `yaml:"name"`
+	Color string `yaml:"color"`
+}
+
+func (x *Priority) GetId() int64    { return x.Id }
+func (x *Priority) GetName() string { return x.Name }
+
+type Status struct {
+	Id    int64  `yaml:"id"`
+	Name  string `yaml:"name"`
+	Color string `yaml:"color"`
+}
+
+func (x *Status) GetId() int64    { return x.Id }
+func (x *Status) GetName() string { return x.Name }
+
 var CatyList = []*Props{}
-var StatusList = []*Props{}
-var PriorityList = []*Props{}
+var StatusList = []*Status{}
+var PriorityList = []*Priority{}
 var DepartmentList = []*Props{}
 
 var CatyDict = map[int64]*Props{}
-var StatusDict = map[int64]*Props{}
-var PriorityDict = map[int64]*Props{}
+var StatusDict = map[int64]*Status{}
+var PriorityDict = map[int64]*Priority{}
 var DepartmentDict = map[int64]*Props{}
 
 func init() {
