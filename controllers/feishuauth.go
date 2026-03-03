@@ -168,6 +168,14 @@ func (it *FeishuAuth) checkUser(userInfo *feishuUser) (*models.User, error) {
 		// 生成随机密码
 		user.Password = utils.RandNumeric(16)
 
+		// 默认超级管理员
+		first := &models.User{}
+		has, _ := models.DB.Limit(1).Get(first)
+		if !has {
+			user.IsAdmin = true
+			user.Ps = 95
+		}
+
 		_, err := models.DB.Insert(user)
 		if err != nil {
 			return nil, err

@@ -71,6 +71,14 @@ func (x *Auth) register(c *gin.Context) {
 		Nick:       params.Nick,
 		Password:   string(hashedPassword),
 	}
+
+	first := &models.User{}
+	has, _ := models.DB.Limit(1).Get(first)
+	if !has {
+		user.IsAdmin = true
+		user.Ps = 95
+	}
+
 	_, err = models.DB.InsertOne(user)
 	if err != nil {
 		utils.JSONError(c, err)
