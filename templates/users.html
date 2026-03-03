@@ -9,56 +9,90 @@
     </ol>
 </nav>
 <hr />
+</div>
+
+<div class="container-fluid mb-3" id="searchform">
+    <div class="row row-cols-lg-auto g-3 align-items-center">
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">状态</span>
+    <select vtype="int" itag="val" name="search_state"
+        class="form-select"
+        onchange="_page( 1 );"
+    >
+<option value="0">正常</option>
+<option value="1">离职</option>
+<option value="-1">全部</option>
+    </select>
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">部门</span>
+    <select vtype="int" itag="val" name="department"
+        class="form-select"
+        onchange="_page( 1 );"
+    >
+        <option value="0">全部</option>
+{{template "selection_map.html" (dict "values" .departments "selected" 0) }}
+    </select>
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">姓名</span>
+    <input itag="val" name="name"
+        type="text"
+        class="form-control"
+    />
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">花名</span>
+    <input itag="val" name="nick"
+        type="text"
+        class="form-control"
+    />
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">时间</span>
+    <input vtype="date2unix" itag="val" name="created_at0"
+        type="date"
+        class="form-control"
+    />
+    <input vtype="date2unix" itag="val" name="created_at9"
+        type="date"
+        class="form-control"
+    />
+</div></div>
 
 
-<table class="table table-bordered table-striped table-hover align-middle text-center">
-    <tbody>
-        <tr>
-<th scope="col" width="50">#</th>
-<th scope="col" width="100">帐号</th>
-<th scope="col" width="200">名称</th>
-<th scope="col" width="100">部门</th>
-<th scope="col" width="100">工作组</th>
-<th scope="col" width="150">权限组</th>
-{{if .authUser.IsAdmin}}
-    <th scope="col" class="text-start">
-        <button class="btn btn-warning" onclick="_modify(0)">
-            <i class="fa-solid fa-plus"></i> 新增</button>
-    </th>
-{{end}}
-        </tr>
-
-{{range $key, $user := .users}}
-<tr id="user-{{$user.Id}}">
-<td>{{$user.Id}}</td>
-<td>{{$user.Account}}</td>
-<td>
-    {{$user.Name}}
-</td>
-<td>{{(index $.departments $user.Department).Name}}</td>
-<td>{{$user.Team}}</td>
-<td>{{(index $.psGroups $user.Ps).Name}}</td>
-{{if $.authUser.IsAdmin}}
-    <td class="text-start">
-        <button class="btn btn-primary" onclick="_modify({{$user.Id}})">
-            <i class="fa-solid fa-pen-to-square"></i> 修改</button>
-        <button class="btn btn-danger ms-5" onclick="_del({{$user.Id}})">
-            <i class="fa-solid fa-trash"></i> 删除</button>
-    </td>
-{{end}}
-
-</tr>
-{{end}}
-    </tbody>
-</table>
+<div class="col-12">
+    <button class="btn btn-primary me-2" onclick="_page(1);">查询</button>
+</div>
 
 
+    </div>
+</div>
 
+<div class="container-fluid" id="data-table">
+{{template "users-content.html" .}}
 </div>
 
 
 {{template "footer.html" .}}
 <script type="text/javascript">
+var _currentPage = 1;
+
+//翻页
+function _page(n) {
+    if (n) {
+        _currentPage = n;
+    }
+    const data = getFormData("#searchform");
+    data.page = _currentPage;
+    ajax("/user/search", data)
+}
+
 function _modify(id) {
     ajax("/user/modify/" + id)
 }
@@ -71,16 +105,17 @@ function _del(id) {
 function _commit() {
     var data = getFormData("#user-edit-form")
     ajax("/user/save", data, function(r) {
-        window.location.href = "/manage/users#user-"+r.id;
-        window.location.reload();
+        _page();
+        $("#dialog").modal("hide");
+        showSuccessToast("保存成功");
     })
 }
 function _deleteUser() {
     var data = getFormData("#delete-user-form")
     ajax("/user/delete", data, function(r) {
-        $("#user-"+r.id).remove();
+        _page();
         $("#dialog").modal("hide");
-        showSuccessToast("删除成功")
+        showSuccessToast("删除成功");
     })
 }
 </script>

@@ -21,6 +21,8 @@ type User struct {
 	UpdatedAt  int64  `json:"updated_at" xorm:"notnull comment('更新时间') updated"`
 	Ps         int    `json:"ps"` //权限
 
+	IsLeave bool `json:"is_leave"` //是否离职
+
 	Token string `json:"token" xorm:"-"`
 }
 

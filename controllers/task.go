@@ -168,6 +168,44 @@ func (x *Task) List(ctx *gin.Context) {
 	x.list(ctx, con)
 }
 
+type listTask struct {
+	Id      int64  `json:"id" xorm:"pk autoincr notnull comment('主键')"`
+	Title   string `json:"title" xorm:"notnull comment('任务标题')"`
+	Content string `json:"content" xorm:"text comment('任务内容')"`
+
+	Author int64 `json:"author" xorm:"notnull comment('创建人id')"`
+	Editor int64 `json:"editor" xorm:"notnull comment('编辑人id')"`
+
+	CreatedAt int64 `json:"created_at" xorm:"notnull comment('创建时间') created"`
+	UpdatedAt int64 `json:"updated_at" xorm:"notnull comment('更新时间') updated"`
+
+	Project int   `json:"project" xorm:"notnull comment('项目id')"`
+	Tag     int64 `json:"tag" xorm:"notnull comment('版本id')"`
+
+	Leader      int64 `json:"leader" xorm:"notnull comment('负责人id')"`
+	LeaderDept  int64 `json:"leader_dept" xorm:"notnull comment('负责人部门id')"`
+	Checker     int64 `json:"checker" xorm:"notnull comment('审核人员id')"`
+	CheckerDept int64 `json:"checker_dept" xorm:"notnull comment('审核人员部门id')"`
+	Tester      int64 `json:"tester" xorm:"notnull comment('测试人员id')"`
+	TesterDept  int64 `json:"tester_dept" xorm:"notnull comment('测试人员部门id')"`
+
+	Caty     int64 `json:"caty" xorm:"notnull comment('分类')"`
+	Status   int64 `json:"status" xorm:"notnull comment('状态')"`
+	Priority int64 `json:"priority" xorm:"notnull comment('优先级')"`
+	Level    int64 `json:"level" xorm:"notnull comment('级别')"`
+
+	Pid int64 `json:"pid" xorm:"notnull default 0 comment('父任务id')"`
+
+	Lockn int `json:"lockn" xorm:"notnull default 0 comment('锁号')"`
+
+	StartAt  int64 `json:"start_at" xorm:"comment('开始时间')"`
+	EndAt    int64 `json:"end_at" xorm:"comment('结束时间')"`
+	ActualAt int64 `json:"actual_at" xorm:"comment('实际完成时间')"`
+
+	TagName     string
+	ProjectName string
+}
+
 func (x *Task) list(ctx *gin.Context, con *listForm) {
 	where := builder.NewCond()
 
@@ -242,43 +280,124 @@ func (x *Task) list(ctx *gin.Context, con *listForm) {
 
 	offset := pagination.GetOffset()
 
-	result := make([]*models.Task, 0)
-	err = models.DB.Table("task").
+	results := make([]*listTask, 0)
+	err = models.DB.Table("task").Select("task.*, tag.name as tag_name, project.name as project_name").
 		Join("LEFT", "tag", "task.tag = tag.id").
-		Where(sqlWhere, args...).OrderBy(con.getOrderBy()).Limit(TaskListPageSize, int(offset)).Find(&result)
+		Join("LEFT", "project", "task.project = project.id").
+		Where(sqlWhere, args...).
+		OrderBy(con.getOrderBy()).
+		Limit(TaskListPageSize, int(offset)).
+		Find(&results)
 	if err != nil {
 		utils.Error(ctx, err)
 		return
 	}
 
 	templateData := ctx.MustGet("templateData").(map[string]any)
-	templateData["tasks"] = result
+	templateData["tasks"] = results
 	templateData["pagination"] = pagination
 	templateData["filter"] = con
 
+	x.addListUsers(templateData, results)
 	x.addCommonData(templateData)
 
 	if utils.IsAjax(ctx) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"#task-table": utils.GetRenderedTemplateContent(ctx, "task-list.html"),
 		})
-	} else {
-		orderedTags := make([]*models.Tag, 0)
-		models.DB.OrderBy("paixu desc, id").Find(&orderedTags)
-		templateData["orderedTags"] = orderedTags
-		orderedUsers := make([]*models.User, 0)
-		models.DB.OrderBy("team, id").Find(&orderedUsers)
-		templateData["orderedUsers"] = orderedUsers
-
-		utils.HTML(ctx, "task.html", nil)
+		return
 	}
+
+	selectorProject := &models.Project{}
+	if con.Project > 0 {
+		models.DB.ID(con.Project).Get(selectorProject)
+	} else {
+		selectorProject.Name = "项目"
+	}
+	templateData["selectorProject"] = selectorProject
+
+	selectorTag := &models.Tag{}
+	if con.Tag > 0 {
+		models.DB.ID(con.Tag).Get(selectorTag)
+	} else {
+		selectorTag.Name = "版本"
+	}
+	templateData["selectorTag"] = selectorTag
+
+	author := &models.User{}
+	if con.Author > 0 {
+		models.DB.ID(con.Author).Get(author)
+	} else {
+		author.Name = "成员"
+	}
+	templateData["selectorAuthor"] = author
+
+	leader := &models.User{}
+	if con.Leader > 0 {
+		models.DB.ID(con.Leader).Get(leader)
+	} else {
+		leader.Name = "成员"
+	}
+	templateData["selectorLeader"] = leader
+
+	checker := &models.User{}
+	if con.Checker > 0 {
+		models.DB.ID(con.Checker).Get(checker)
+	} else {
+		checker.Name = "成员"
+	}
+	templateData["selectorChecker"] = checker
+
+	tester := &models.User{}
+	if con.Tester > 0 {
+		models.DB.ID(con.Tester).Get(tester)
+	} else {
+		tester.Name = "成员"
+	}
+	templateData["selectorTester"] = tester
+
+	utils.HTML(ctx, "task.html", nil)
+}
+
+func (x *Task) addTaskUsers(templateData map[string]any, task *models.Task) {
+	//添加任务的时候，必须选择人
+	taskUsers := make(map[int64]*models.User)
+	models.DB.Where("id = ? or id = ? or id = ? or id = ? or id = ?", task.Author, task.Editor, task.Leader, task.Checker, task.Tester).
+		Find(&taskUsers)
+	templateData["author"] = taskUsers[task.Author]
+	templateData["editor"] = taskUsers[task.Editor]
+	templateData["leader"] = taskUsers[task.Leader]
+	templateData["checker"] = taskUsers[task.Checker]
+	templateData["tester"] = taskUsers[task.Tester]
+}
+func (x *Task) addListUsers(templateData map[string]any, results []*listTask) {
+	userIds := make([]int64, 0)
+	usersDict := make(map[int64]bool)
+	for _, v := range results {
+		if v.Author > 0 && !usersDict[v.Author] {
+			userIds = append(userIds, v.Author)
+		}
+		if v.Editor > 0 && !usersDict[v.Editor] {
+			userIds = append(userIds, v.Editor)
+		}
+		if v.Leader > 0 && !usersDict[v.Leader] {
+			userIds = append(userIds, v.Leader)
+		}
+		if v.Checker > 0 && !usersDict[v.Checker] {
+			userIds = append(userIds, v.Checker)
+		}
+		if v.Tester > 0 && !usersDict[v.Tester] {
+			userIds = append(userIds, v.Tester)
+		}
+	}
+
+	users := make(map[int64]*models.User)
+	models.DB.In("id", userIds).Or("is_leave = 0").Find(&users)
+
+	templateData["users"] = users
 }
 
 func (x *Task) addCommonData(userData map[string]any) {
-	userData["tags"] = getTags()
-	userData["users"] = getUsers()
-	userData["projects"] = getProjects()
-
 	userData["props"] = gin.H{
 		"caty":       models.CatyDict,
 		"status":     models.StatusDict,
@@ -314,14 +433,24 @@ func (x *Task) NewTask(ctx *gin.Context) {
 	templateData := ctx.MustGet("templateData").(map[string]any)
 	templateData["task"] = task
 
-	orderedTags := make([]*models.Tag, 0)
-	models.DB.OrderBy("paixu desc, id").Find(&orderedTags)
-	templateData["orderedTags"] = orderedTags
-	orderedUsers := make([]*models.User, 0)
-	models.DB.OrderBy("team, id").Find(&orderedUsers)
-	templateData["orderedUsers"] = orderedUsers
-
+	x.addTaskUsers(templateData, task)
 	x.addCommonData(templateData)
+
+	selectorTag := &models.Tag{}
+	if task.Tag > 0 {
+		models.DB.ID(task.Tag).Get(selectorTag)
+	} else {
+		selectorTag.Name = "版本"
+	}
+	templateData["selectorTag"] = selectorTag
+
+	selectorProject := &models.Project{}
+	if task.Project > 0 {
+		models.DB.ID(task.Project).Get(selectorProject)
+	} else {
+		selectorProject.Name = "项目"
+	}
+	templateData["selectorProject"] = selectorProject
 
 	utils.HTML(ctx, "task-add.html", nil)
 }
@@ -348,8 +477,10 @@ func (x *Task) Get(ctx *gin.Context) {
 		searchId = task.Pid
 	}
 
-	results := make([]*models.Task, 0)
-	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&results)
+	results := make([]*listTask, 0)
+	err = models.DB.Table("task").Select("task.*, tag.name as tag_name").
+		Join("LEFT", "tag", "task.tag = tag.id").
+		Where("pid = ? or task.id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&results)
 	if err != nil {
 		utils.JSONError(ctx, err)
 		return
@@ -364,14 +495,18 @@ func (x *Task) Get(ctx *gin.Context) {
 		templateData["parent"] = &models.Task{}
 	}
 
+	x.addListUsers(templateData, results)
+	x.addTaskUsers(templateData, task)
+
 	templateData["pagination"] = &utils.Pagination{Page: 1, Total: int64(len(results)), Size: 10000}
 
-	orderedTags := make([]*models.Tag, 0)
-	models.DB.OrderBy("paixu desc, id").Find(&orderedTags)
-	templateData["orderedTags"] = orderedTags
-	orderedUsers := make([]*models.User, 0)
-	models.DB.OrderBy("team, id").Find(&orderedUsers)
-	templateData["orderedUsers"] = orderedUsers
+	selectorTag := &models.Tag{}
+	models.DB.ID(task.Tag).Get(selectorTag)
+	templateData["selectorTag"] = selectorTag
+
+	selectorProject := &models.Project{}
+	models.DB.ID(task.Project).Get(selectorProject)
+	templateData["selectorProject"] = selectorProject
 
 	x.addCommonData(templateData)
 
@@ -481,15 +616,16 @@ func (x *Task) Related(ctx *gin.Context) {
 		searchId = task.Id
 	}
 
-	tasks := make([]*models.Task, 0)
-	err = models.DB.Where("pid = ? or id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&tasks)
+	tasks := make([]*listTask, 0)
+	err = models.DB.Table("task").Select("task.*, tag.name as tag_name").
+		Join("LEFT", "tag", "tag.id = task.tag").
+		Where("pid = ? or task.id = ?", searchId, searchId).OrderBy("pid, status, priority desc, level desc, id desc").Find(&tasks)
 	if err != nil {
 		utils.JSONError(ctx, err)
 		return
 	}
 
 	if len(tasks) == 1 {
-
 		ctx.JSON(http.StatusOK, gin.H{
 			"#related-tasks": "",
 		})
@@ -501,7 +637,6 @@ func (x *Task) Related(ctx *gin.Context) {
 		"tasks":      tasks,
 		"pagination": &utils.Pagination{Page: 1, Total: int64(len(tasks)), Size: 10000},
 
-		"tags":     getTags(),
 		"users":    getUsers(),
 		"projects": getProjects(),
 

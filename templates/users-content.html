@@ -1,0 +1,47 @@
+<table class="table table-bordered table-striped table-hover align-middle text-center">
+    <tbody>
+        <tr>
+<th width="50">#</th>
+<th width="100">帐号</th>
+<th width="200">姓名</th>
+<th width="200">花名</th>
+<th width="100">部门</th>
+<th width="100">工作组</th>
+<th width="150">权限组</th>
+<th width="150">状态</th>
+<th width="120">创建时间</th>
+{{if .authUser.IsAdmin}}
+    <th scope="col" class="text-start">
+        <button class="btn btn-warning" onclick="_modify(0)">
+            <i class="fa-solid fa-plus"></i> 新增</button>
+    </th>
+{{end}}
+        </tr>
+
+{{range $key, $user := .users}}
+<tr>
+<td>{{$user.Id}}</td>
+<td>{{$user.Account}}</td>
+<td>{{$user.Name}}</td>
+<td>{{$user.Nick}}</td>
+<td>{{(index $.departments $user.Department).Name}}</td>
+<td>{{$user.Team}}</td>
+<td>{{(index $.psGroups $user.Ps).Name}}</td>
+<td>{{if $user.IsLeave}}<span class="badge text-bg-danger">已离职</span>{{end}}</td>
+<td>{{$user.CreatedAt | unixToDay}}</td>
+{{if $.authUser.IsAdmin}}
+    <td class="text-start">
+        <button class="btn btn-primary" onclick="_modify({{$user.Id}})">
+            <i class="fa-solid fa-pen-to-square"></i> 修改</button>
+        <button class="btn btn-danger ms-5" onclick="_del({{$user.Id}})">
+            <i class="fa-solid fa-trash"></i> 删除</button>
+    </td>
+{{end}}
+
+</tr>
+{{end}}
+
+    </tbody>
+</table>
+
+{{pages .pagination "_page"}}

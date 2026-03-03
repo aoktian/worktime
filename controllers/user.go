@@ -8,6 +8,7 @@ import (
 	"webserver/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-xorm/builder"
 	"github.com/pkg/errors"
 )
 
@@ -16,7 +17,9 @@ type User struct {
 
 func (x *User) URLPatterns() []utils.Route {
 	return []utils.Route{
-		{Path: "/user/list", ResourceFunc: x.List, Method: http.MethodGet},
+		{Path: "/user/list", ResourceFunc: x.index, Method: http.MethodGet},
+		{Path: "/user/search", ResourceFunc: x.search, Method: http.MethodPost},
+		{Path: "/user/selector", ResourceFunc: x.selector, Method: http.MethodPost},
 
 		{Path: "/user/modify/:id", ResourceFunc: x.Modify, Method: http.MethodPost},
 		{Path: "/user/save", ResourceFunc: x.Save, Method: http.MethodPost},
@@ -36,11 +39,104 @@ func getUsers() map[int64]*models.User {
 	return results
 }
 
-func (x *User) List(ctx *gin.Context) {
+func (x *User) selector(ctx *gin.Context) {
+	params := &selectorReq{}
+	if !utils.ShouldBindJSON(ctx, params) {
+		return
+	}
+
+	pageSize := 20
+	offset := (params.Page - 1) * pageSize
+
 	results := make([]*models.User, 0)
-	err := models.DB.OrderBy("department, team, id").Find(&results)
+	if params.Keyword == "" {
+		models.DB.Where("department = ? and is_leave = 0", params.ProjectId).
+			Limit(pageSize, offset).Find(&results)
+	} else {
+		models.DB.Where("department = ? and name like ?", params.ProjectId, "%"+params.Keyword+"%").
+			Limit(pageSize, offset).Find(&results)
+	}
+
+	more := false
+	if len(results) == pageSize {
+		more = true
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"results":    results,
+		"pagination": gin.H{"more": more},
+	})
+}
+
+type userSearch struct {
+	models.User
+	Page        int64 `json:"page"`
+	SearchState int   `json:"search_state"`
+	CreatedAt0  int64 `json:"created_at0"`
+	CreatedAt9  int64 `json:"created_at9"`
+}
+
+func (x *User) index(ctx *gin.Context) {
+	x.list(ctx, &userSearch{})
+	utils.HTML(ctx, "users.html", nil)
+}
+
+func (x *User) search(ctx *gin.Context) {
+	params := &userSearch{}
+	if !utils.ShouldBindJSON(ctx, params) {
+		return
+	}
+	x.list(ctx, params)
+	ctx.JSON(http.StatusOK, gin.H{
+		"#data-table": utils.GetRenderedTemplateContent(ctx, "users-content.html"),
+	})
+}
+
+func (x *User) list(ctx *gin.Context, con *userSearch) {
+	where := builder.NewCond()
+	if con.Department > 0 {
+		where = where.And(builder.Eq{"department": con.Department})
+	}
+	if con.Name != "" {
+		where = where.And(builder.Like{"name", con.Name})
+	}
+	if con.Nick != "" {
+		where = where.And(builder.Like{"nick", con.Nick})
+	}
+	if con.CreatedAt0 > 0 {
+		where = where.And(builder.Gte{"created_at": con.CreatedAt0})
+	}
+	if con.CreatedAt9 > 0 {
+		where = where.And(builder.Lte{"created_at": con.CreatedAt9})
+	}
+	if con.SearchState > -1 {
+		where = where.And(builder.Eq{"is_leave": con.SearchState})
+	}
+
+	sqlWhere, args, err := builder.ToSQL(where)
 	if err != nil {
-		utils.JSONError(ctx, err)
+		utils.Error(ctx, err)
+		return
+	}
+
+	total, err := models.DB.Where(sqlWhere, args...).Count(new(models.User))
+	if err != nil {
+		utils.Error(ctx, err)
+		return
+	}
+
+	results := make([]*models.User, 0)
+
+	var pageSize int64 = 12
+	pagination := &utils.Pagination{Page: con.Page, Size: pageSize, Total: total}
+	pagination.FormatPage()
+
+	offset := pagination.GetOffset()
+	err = models.DB.Where(sqlWhere, args...).
+		OrderBy("is_leave, department, team, id").
+		Limit(int(pageSize), int(offset)).
+		Find(&results)
+	if err != nil {
+		utils.Error(ctx, err)
 		return
 	}
 
@@ -48,8 +144,7 @@ func (x *User) List(ctx *gin.Context) {
 	h["users"] = results
 	h["departments"] = models.DepartmentDict
 	h["psGroups"] = utils.GetPathPermission().UserGroups
-
-	utils.HTML(ctx, "users.html", nil)
+	h["pagination"] = pagination
 }
 
 func (x *User) Imodify(ctx *gin.Context) {
@@ -186,7 +281,7 @@ func (x *User) Save(ctx *gin.Context) {
 		}
 	}
 
-	_, err := models.DB.ID(user.Id).Update(user)
+	_, err := models.DB.ID(user.Id).MustCols("is_leave").Update(user)
 	if err != nil {
 		session.Rollback()
 		utils.JSONError(ctx, err)

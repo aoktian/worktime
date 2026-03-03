@@ -1,4 +1,9 @@
-{{template "header.html" .}}</head><body>
+{{template "header.html" .}}
+
+<link href="/static/select2/select2.min.css" rel="stylesheet" />
+<link href="/static/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+</head><body>
 {{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
 
 <div class="container-fluid">
@@ -69,8 +74,8 @@
 
     <div class="card-body" id="task-modify-form">
 <p><i>
-    <span class="me-5">作者：{{(index $.users .task.Author).Name}} ({{.task.CreatedAt | formatDate}} <span class="text-primary">{{.task.CreatedAt | SecondsToTime}}</span> )
-    </span><span id="task-last-modify">修改：{{(index $.users .task.Editor).Name}} ({{.task.UpdatedAt | formatDate}})
+    <span class="me-5">作者：{{.author.Name}} ({{.task.CreatedAt | formatDate}} <span class="text-primary">{{.task.CreatedAt | SecondsToTime}}</span> )
+    </span><span id="task-last-modify">修改：{{.editor.Name}} ({{.task.UpdatedAt | formatDate}})
     </span>
 </i></p>
 <hr />
@@ -104,27 +109,23 @@
 {{template "selection_map.html" (dict "values" .props.priority "selected" .task.Priority) }}
 </select>
 <input vtype="int" type="number" class="form-control" itag="val" name="level" value="{{.task.Level}}" />
+<span class="input-group-text" onclick="_task_priority_change(99999)"><i class="fa-solid fa-circle-question"></i></span>
 </div></div>
-
-
 
     </div>
 
 <div class="row row-cols-lg-auto g-3 align-items-center mt-2">
 
 <div class="col-12"><div class="input-group">
-    <select vtype="int" itag="val" name="project"
-        class="form-select"
-        value="{{.task.Project}}"
-        onchange="onChangePro( this.value, '#filterTags' );"
-    >
-{{template "selection_map.html" (dict "values" .projects "selected" .task.Project) }}
+    <div class="input-group-text"></div>
+    <select id="filterProjects" vtype="int" itag="val" name="project" class="form-select">
+<option value="{{.selectorProject.Id}}" selected="selected">{{.selectorProject.Name}}</option>
     </select>
-    <select vtype="int" id="filterTags" itag="val" name="tag"
+    <select project_id="{{.selectorProject.Id}}" vtype="int" id="filterTags" itag="val" name="tag"
         class="form-select"
         value="{{.task.Tag}}"
     >
-{{template "selection_tag.html" (dict "values" .orderedTags "selected" .task.Tag "filterId" .task.Project) }}
+<option value="{{.selectorTag.Id}}" selected="selected">{{.selectorTag.Name}}</option>
     </select>
 
 </div></div>
@@ -132,53 +133,50 @@
 <div class="col-12"><div class="input-group">
     <div class="input-group-text">执行</div>
     <select vtype="int" itag="val" name="leader_dept"
-        class="form-select"
+        class="form-select" style="width: 80px;"
         value="{{.task.LeaderDept}}"
-        onchange="onChangeDepartment( this.value, '#filterLeader' );"
+        onchange="onChangePro(this, '#filterLeader' );"
     >
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.LeaderDept) }}
     </select>
-    <select vtype="int" id="filterLeader" itag="val" name="leader"
+    <select project_id="{{.task.LeaderDept}}" vtype="int" id="filterLeader" itag="val" name="leader"
         class="form-select"
-        value="{{.task.Leader}}"
     >
-{{template "selection_user.html" (dict "values" .orderedUsers "selected" .task.Leader "filterId" .task.LeaderDept) }}
+<option value="{{.leader.Id}}" selected>{{.leader.Name}}</option>
     </select>
 </div></div>
 
 <div class="col-12"><div class="input-group">
     <div class="input-group-text">验收</div>
     <select vtype="int" itag="val" name="checker_dept"
-        class="form-select"
+        class="form-select" style="width: 80px;"
         value="{{.task.CheckerDept}}"
-        onchange="onChangeDepartment( this.value, '#filterChecker' );"
+        onchange="onChangePro(this, '#filterChecker' );"
     >
     <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.CheckerDept) }}
     </select>
-    <select vtype="int" id="filterChecker" itag="val" name="checker"
+    <select project_id="{{.task.CheckerDept}}" vtype="int" id="filterChecker" itag="val" name="checker"
         class="form-select"
-        value="{{.task.Checker}}"
     >
-{{template "selection_user.html" (dict "values" .orderedUsers "selected" .task.Checker "filterId" .task.CheckerDept) }}
+<option value="{{.checker.Id}}" selected>{{.checker.Name}}</option>
     </select>
 </div></div>
 
 <div class="col-12"><div class="input-group">
     <div class="input-group-text">测试</div>
     <select vtype="int" itag="val" name="tester_dept"
-        class="form-select"
+        class="form-select" style="width: 80px;"
         value="{{.task.TesterDept}}"
-        onchange="onChangeDepartment( this.value, '#filterTester' );"
+        onchange="onChangePro(this, '#filterTester' );"
     >
     <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.TesterDept) }}
     </select>
-    <select vtype="int" id="filterTester" itag="val" name="tester"
+    <select project_id="{{.task.TesterDept}}" vtype="int" id="filterTester" itag="val" name="tester"
         class="form-select"
-        value="{{.task.Tester}}"
     >
-{{template "selection_user.html" (dict "values" .orderedUsers "selected" .task.Tester "filterId" .task.TesterDept) }}
+<option value="{{.tester.Id}}" selected>{{.tester.Name}}</option>
     </select>
 
 </div></div>
@@ -319,8 +317,6 @@
 {{template "priority-tips.html"}}
 
 <script type="text/javascript">
-var users = {{.users | json}};
-var tags = {{.tags | json}};
 var task = {{.task | json}};
 
 $(document).ready(function() {
@@ -366,7 +362,9 @@ function _commit_new_comment( ) {
 }
 
 function _set_related() {
-    ajax("/task/related/{{.task.Id}}")
+    ajax("/task/related/{{.task.Id}}", {}, function(r) {
+        _initBatchModifyTags()
+    })
 }
 
 
@@ -482,6 +480,25 @@ function _commit_comment(id) {
         $('#comment-last-modify-'+id).html(`修改：${iname} (${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()})`)
     })
 }
+</script>
+
+<script src="/static/tagselector.js?t=20260228"></script>
+<script type="text/javascript">
+function _initBatchModifyTags() {
+    initProjectSelect2("#batchModifyProjects", "#batchModifyTags", false)
+    initTagSelect2("/tag/selector", "#batchModifyTags", false);
+    initTagSelect2("/user/selector", "#batchModifyLeader", false);
+    initTagSelect2("/user/selector", "#batchModifyChecker", false);
+    initTagSelect2("/user/selector", "#batchModifyTester", false);
+}
+$(document).ready(function() {
+    initProjectSelect2("#filterProjects", "#filterTags", false)
+    initTagSelect2("/tag/selector", "#filterTags", false);
+    initTagSelect2("/user/selector", "#filterLeader", false);
+    initTagSelect2("/user/selector", "#filterChecker", false);
+    initTagSelect2("/user/selector", "#filterTester", false);
+    _initBatchModifyTags()
+});
 </script>
 
 </body></html>

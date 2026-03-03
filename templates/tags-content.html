@@ -1,0 +1,47 @@
+<table class="table table-bordered table-striped table-hover align-middle text-center">
+    <tbody>
+        <tr>
+<th width="50">#</th>
+<th width="200">项目</th>
+<th width="200">名称</th>
+<th width="80">排序</th>
+<th width="80">归档</th>
+<th width="120">创建</th>
+<th width="120">开始</th>
+<th width="120">结束</th>
+<th scope="col" class="text-start">
+    <button class="btn btn-warning" onclick="_modify(0)">
+        <i class="fa-solid fa-plus"></i> 新增</button>
+</th>
+        </tr>
+
+{{range $key, $tag := .tags}}
+<tr>
+<td>{{$tag.Id}}</td>
+<td>{{(index $.projects $tag.ProjectId).Name}}</td>
+<td><a href="/task/tag/{{$tag.Id}}">{{$tag.Name}}</a></td>
+<td>{{$tag.Paixu}}</td>
+<td>{{if $tag.IsArchived}}<span class="badge text-bg-danger">已归档</span>{{end}}</td>
+<td>{{$tag.CreatedAt | unixToDay}}</td>
+<td>{{$tag.StartAt | unixToDay}}</td>
+<td>{{$tag.EndAt | unixToDay}}</td>
+
+<td class="text-start">
+    <button class="btn btn-primary" onclick="_modify({{$tag.Id}})">
+        <i class="fa-solid fa-pen-to-square"></i> 修改</button>
+    <button class="btn btn-primary ms-5" onclick="ajax('/tag/stats/{{$tag.Id}}')">
+        <i class="fa-solid fa-chart-simple"></i> 统计</button>
+    <button class="btn btn-primary ms-5" onclick="_show_gantt({{$tag.Id}})">
+        <i class="fa-solid fa-chart-gantt"></i> 甘特图</button>
+
+    <button class="btn btn-danger ms-5" onclick="_del({{$tag.Id}})">
+        <i class="fa-solid fa-trash"></i> 删除</button>
+
+</td>
+</tr>
+{{end}}
+
+    </tbody>
+</table>
+
+{{pages .page "_page"}}

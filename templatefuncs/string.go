@@ -25,7 +25,6 @@ func pagesHtml(pagination *utils.Pagination, pagef string) template.HTML {
 	pageShow := int64(10)
 	offsetShow := int64(2)
 	pages := pagination.GetTotalPage()
-
 	result := "<nav><ul class='pagination'>"
 
 	var from int64

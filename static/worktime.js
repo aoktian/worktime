@@ -106,6 +106,9 @@ function getFormData(formSelector) {
             case "int":
                 value = parseInt(value);
                 break;
+            case "bool":
+                value = value === "1";
+                break;
             case "float":
                 value = parseFloat(value);
                 break;
@@ -254,6 +257,9 @@ function get_form_values(id, forme ) {
             case "int":
                 value = parseInt(value);
                 break;
+            case "bool":
+                value = value === "1";
+                break;
             case "float":
                 value = parseFloat(value);
                 break;
@@ -313,34 +319,6 @@ function onChangeDepartment( id, tar, first ) {
     $(tar).html( options + getUsers( id ) );
 }
 
-function getTags( id ) {
-    var options = "";
-    var ordered = [];
-    for (var i in tags) {
-        if (tags[i].project_id == id) {
-            ordered.push(tags[i]);
-        }
-    }
-    ordered.sort(function(a, b) {
-        if (a.paixu !== b.paixu) {
-            return b.paixu - a.paixu; // paixu 从大到小
-        }
-        return a.id - b.id; // paixu 相同时 id 从小到大
-    });
-    for (var i = 0; i < ordered.length; i++) {
-        options += "<option value='" + ordered[i].id + "'>" + ordered[i].name + "</option>";
-    }
-    return options;
-}
-function onChangePro( id, tar, first ) {
-    var options = "";
-    if (first) {
-        options += "<option value='0'>"+first+"</option>";
-    }
-
-    $(tar).html( options + getTags( id ) );
-}
-
 function batchModify( cb ) {
     // 收集所有带 itag="val" 属性的元素的值
     let updateData = get_form_values("batchModify");
@@ -384,30 +362,7 @@ function batchModify( cb ) {
     });
 }
 
-var _page = 1;
-function filter_result( page ) {
-    if (page) {
-      _page = page;
-    }
-    let requestData = get_form_values( "taskfilter" );
-    requestData.page = _page;
 
-    _getlist( requestData );
-}
-
-function _getlist( requestData ) {
-    $.ajax({
-        url: '/task/list',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(requestData),
-        dataType: 'json',
-        success: handleResponse,
-        error: function(xhr, status, error) {
-            alert('操作失败: ' + error);
-        }
-    });
-}
 
 
 function initEditor( id, focus, height ) {

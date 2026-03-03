@@ -50,6 +50,16 @@
     </select>
 </div>
 
+<div class="col-md-4">
+    <label class="form-label">状态</label>
+    <select vtype="bool" name="is_leave"
+        class="form-select"
+    >
+<option value="0" {{if eq .tag.IsLeave false}}selected{{end}}>正常</option>
+<option value="1" {{if eq .tag.IsLeave true}}selected{{end}}>离职</option>
+    </select>
+</div>
+
 </div>
 
         </div>

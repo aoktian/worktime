@@ -8,6 +8,7 @@ import (
 	"webserver/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-xorm/builder"
 	"github.com/pkg/errors"
 )
 
@@ -16,7 +17,9 @@ type Tag struct {
 
 func (x *Tag) URLPatterns() []utils.Route {
 	return []utils.Route{
-		{Method: http.MethodGet, Path: "/project/tag/:project_id/:page", ResourceFunc: x.InProject},
+		{Method: http.MethodGet, Path: "/project/tag/:project_id", ResourceFunc: x.InProject},
+		{Method: http.MethodPost, Path: "/tag/search", ResourceFunc: x.search},
+		{Method: http.MethodPost, Path: "/tag/selector", ResourceFunc: x.selector},
 		{Method: http.MethodPost, Path: "/tag/modify/:id", ResourceFunc: x.Modify},
 		{Method: http.MethodPost, Path: "/tag/save", ResourceFunc: x.Save},
 		{Method: http.MethodPost, Path: "/tag/delete/:id", ResourceFunc: x.Delete},
@@ -31,24 +34,111 @@ func getTags() map[int64]*models.Tag {
 	return results
 }
 
+type selectorReq struct {
+	Keyword   string `json:"keyword"`
+	ProjectId int64  `json:"project_id"`
+	Page      int    `json:"page"`
+}
+
+func (x *Tag) selector(ctx *gin.Context) {
+	params := &selectorReq{}
+	if !utils.ShouldBindJSON(ctx, params) {
+		return
+	}
+
+	pageSize := 20
+
+	results := make([]*models.Tag, 0)
+	offset := (params.Page - 1) * pageSize
+	if params.Keyword == "" {
+		models.DB.Where("project_id = ? and is_archived = 0", params.ProjectId).
+			Limit(pageSize, offset).Find(&results)
+	} else {
+		models.DB.Where("project_id = ? and name like ?", params.ProjectId, "%"+params.Keyword+"%").
+			Limit(pageSize, offset).Find(&results)
+	}
+
+	more := false
+	if len(results) == pageSize {
+		more = true
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"results":    results,
+		"pagination": gin.H{"more": more},
+	})
+}
+
+type tagSearch struct {
+	models.Tag
+	Page        int   `json:"page"`
+	SearchState int   `json:"search_state"`
+	CreatedAt0  int64 `json:"created_at0"`
+	CreatedAt9  int64 `json:"created_at9"`
+}
+
 func (x *Tag) InProject(ctx *gin.Context) {
-	project_id := GetParamInt(ctx, "project_id")
-	page := GetParamInt(ctx, "page")
+	project_id := GetParamInt64(ctx, "project_id")
+	params := &tagSearch{
+		Tag:  models.Tag{ProjectId: int(project_id)},
+		Page: 1,
+	}
+	x.list(ctx, params)
+	utils.HTML(ctx, "tags.html", nil)
+}
+
+func (x *Tag) search(ctx *gin.Context) {
+	params := &tagSearch{}
+	if !utils.ShouldBindJSON(ctx, params) {
+		return
+	}
+	x.list(ctx, params)
+	ctx.JSON(http.StatusOK, gin.H{
+		"#data-table": utils.GetRenderedTemplateContent(ctx, "tags-content.html"),
+	})
+}
+
+func (x *Tag) list(ctx *gin.Context, con *tagSearch) {
+	where := builder.NewCond()
+	if con.ProjectId > 0 {
+		where = where.And(builder.Eq{"project_id": con.ProjectId})
+	}
+	if con.Name != "" {
+		where = where.And(builder.Like{"name", con.Name})
+	}
+	if con.CreatedAt0 > 0 {
+		where = where.And(builder.Gte{"created_at": con.CreatedAt0})
+	}
+	if con.CreatedAt9 > 0 {
+		where = where.And(builder.Lte{"created_at": con.CreatedAt9})
+	}
+
+	if con.SearchState > -1 {
+		where = where.And(builder.Eq{"is_archived": con.SearchState})
+	}
+
+	sqlWhere, args, err := builder.ToSQL(where)
+	if err != nil {
+		utils.Error(ctx, err)
+		return
+	}
 
 	project := &models.Project{}
-	models.DB.Id(project_id).Get(project)
+	if con.ProjectId > 0 {
+		models.DB.Id(con.ProjectId).Get(project)
+	}
 
-	pagination := &utils.Pagination{Page: int64(page), Size: 15}
-	total, err := models.DB.Where("project_id = ?", project_id).Count(new(models.Tag))
+	var pageSize int64 = 12
+	pagination := &utils.Pagination{Page: int64(con.Page), Size: pageSize}
+	total, err := models.DB.Where(sqlWhere, args...).Count(new(models.Tag))
 	if err != nil {
-		utils.JSONError(ctx, err)
+		utils.Error(ctx, err)
 		return
 	}
 	pagination.Total = total
 
 	results := make([]*models.Tag, 0)
-	sql := "select * from tag where project_id = ? order by paixu desc, id desc limit ? offset ?"
-	err = models.DB.SQL(sql, project_id, pagination.Size, pagination.GetOffset()).Find(&results)
+	err = models.DB.Where(sqlWhere, args...).OrderBy("paixu desc, id desc").
+		Limit(int(pagination.Size), int(pagination.GetOffset())).Find(&results)
 	if err != nil {
 		utils.JSONError(ctx, err)
 		return
@@ -58,8 +148,7 @@ func (x *Tag) InProject(ctx *gin.Context) {
 	h["tags"] = results
 	h["page"] = pagination
 	h["project"] = project
-
-	utils.HTML(ctx, "tags.html", nil)
+	h["projects"] = getProjects()
 }
 
 func (x *Tag) Modify(ctx *gin.Context) {
@@ -87,7 +176,7 @@ func (x *Tag) Save(ctx *gin.Context) {
 
 	var err = errors.New("")
 	if update.Id > 0 {
-		_, err = models.DB.ID(update.Id).MustCols("is_lock").Update(update)
+		_, err = models.DB.ID(update.Id).MustCols("is_archived").Update(update)
 	} else {
 		_, err = models.DB.InsertOne(update)
 	}

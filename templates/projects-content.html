@@ -1,0 +1,42 @@
+<table class="table table-bordered table-striped table-hover align-middle text-center">
+    <tbody>
+        <tr>
+<th width="50">#</th>
+<th width="200">名称</th>
+<th width="80">排序</th>
+<th width="80">归档</th>
+<th width="120">创建</th>
+<th width="120">开始</th>
+<th width="120">结束</th>
+<th class="text-start">
+    <button class="btn btn-warning" onclick="_modify(0)">
+        <i class="fa-solid fa-plus"></i> 新增</button>
+</th>
+        </tr>
+
+{{range $key, $project := .projects}}
+<tr id="project-{{$project.Id}}">
+<td>{{$project.Id}}</td>
+<td><a href="/task/project/{{$project.Id}}">{{$project.Name}}</a></td>
+<td>{{$project.Paixu}}</td>
+<td>{{if $project.IsArchived}}<span class="badge text-bg-danger">已归档</span>{{end}}</td>
+<td>{{$project.CreatedAt | unixToDay}}</td>
+<td>{{$project.StartAt | unixToDay}}</td>
+<td>{{$project.EndAt | unixToDay}}</td>
+<td class="text-start">
+    <button class="btn btn-primary" onclick="_modify({{$project.Id}})">
+        <i class="fa-solid fa-pen-to-square"></i> 修改</button>
+
+    <a class="btn btn-primary ms-5" href="/project/tag/{{$project.Id}}">
+        <i class="fa-solid fa-list"></i> 管理版本</a>
+
+    <button class="btn btn-danger ms-5" onclick="_del({{$project.Id}})">
+        <i class="fa-solid fa-trash"></i> 删除
+    </button>
+</td>
+</tr>
+{{end}}
+    </tbody>
+</table>
+
+{{pages .page "_page"}}

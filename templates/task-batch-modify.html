@@ -1,12 +1,6 @@
-<div class="col-12">
-
-<div class="input-group">
-<select
-itag="val" vtype="int" name="project"
-class="form-select"
-value="0"
-onchange="onChangePro( this.value, '#batchModifyTags', '版本' );"
->
+<div class="col-12"><div class="input-group">
+    <div class="input-group-text"></div>
+<select id="batchModifyProjects" itag="val" vtype="int" name="project" class="form-select">
 <option value="0">项目</option>
 {{template "selection_map.html" (dict "values" .projects "selected" 0) }}
 </select>
@@ -15,20 +9,16 @@ class="form-select"
 value="0"
 itag="val" vtype="int" name="tag"
 >
-<option value="0">版本</option>
+<option value="0" selected>版本</option>
 </select>
-</div>
+</div></div>
 
-</div>
-
-<div class="col-12">
-
-<div class="input-group">
+<div class="col-12"><div class="input-group">
 <div class="input-group-text">执行</div>
 <select itag="val" vtype="int" name="leader_dept"
-class="form-select"
+class="form-select" style="width: 80px;"
 value="0"
-onchange="onChangeDepartment( this.value, '#batchModifyLeader', '成员' );"
+onchange="onChangePro(this, '#batchModifyLeader' );"
 >
 <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
@@ -40,18 +30,14 @@ value="0"
 >
 <option value="0">成员</option>
 </select>
-</div>
+</div></div>
 
-</div>
-
-<div class="col-12">
-
-<div class="input-group">
+<div class="col-12"><div class="input-group">
 <div class="input-group-text">验收</div>
 <select itag="val" vtype="int" name="checker_dept"
-class="form-select"
+class="form-select" style="width: 80px;"
 value="0"
-onchange="onChangeDepartment( this.value, '#batchModifyChecker', '成员' );"
+onchange="onChangePro(this, '#batchModifyChecker' );"
 >
 <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
@@ -62,16 +48,13 @@ itag="val" vtype="int" name="checker"
 >
 <option value="0">成员</option>
 </select>
-</div>
+</div></div>
 
-</div>
-
-<div class="col-12">
-<div class="input-group">
-<div class="input-group-text">品控</div>
+<div class="col-12"><div class="input-group">
+<div class="input-group-text">测试</div>
 <select itag="val" vtype="int" name="tester_dept"
-class="form-select"
-onchange="onChangeDepartment( this.value, '#batchModifyTester', '成员' );"
+class="form-select" style="width: 80px;"
+onchange="onChangePro(this, '#batchModifyTester' );"
 >
 <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
@@ -82,8 +65,7 @@ itag="val" vtype="int" name="tester"
 >
 <option value="0">成员</option>
 </select>
-</div>
-</div>
+</div></div>
 
 <div class="col-12"><div class="input-group">
 
@@ -123,3 +105,4 @@ itag="val" vtype="int" name="priority"
 <input type="text" class="form-control" itag="val" vtype="int" name="level" value="0" />
 
 </div></div>
+

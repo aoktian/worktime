@@ -6,7 +6,7 @@
         </div>
 <div class="modal-body" id="edit-project-form">
 
-<input type="hidden" name="id" value="{{.project.Id}}" />
+<input vtype="int" type="hidden" name="id" value="{{.project.Id}}" />
 
 <div class="mb-3">
     <label class="form-label">输入名称</label>
@@ -17,6 +17,39 @@
 
     <div class="form-text text-danger">建议名字不要超过5个字。</div>
 
+</div>
+
+<div class="mb-2">
+    <label class="form-label">排序</label>
+    <input class="form-control" type="number"
+        value="{{.project.Paixu}}"
+        name="paixu" vtype="int"
+    />
+</div>
+
+<div class="mb-2">
+    <label class="form-label">归档</label>
+    <select vtype="bool" name="is_archived"
+        class="form-select"
+    >
+        <option value="0" {{if eq .project.IsArchived false}}selected{{end}}>否</option>
+        <option value="1" {{if eq .project.IsArchived true}}selected{{end}}>是</option>
+    </select>
+</div>
+
+<div class="mb-2">
+    <label class="form-label">开始时间</label>
+    <input vtype="date2unix" class="form-control" type="date"
+        value="{{.project.StartAt | unixToDay}}"
+        name="start_at"
+    />
+</div>
+<div class="mb-2">
+    <label class="form-label">结束时间</label>
+    <input vtype="date2unix" class="form-control" type="date"
+        value="{{.project.EndAt | unixToDay}}"
+        name="end_at"
+    />
 </div>
 
 </div>

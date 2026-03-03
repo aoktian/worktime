@@ -33,63 +33,70 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-<li class="breadcrumb-item"><a href="/manage/projects#project-{{.project.Id}}">项目管理</a></li>
+<li class="breadcrumb-item"><a href="/project/list#project-{{.project.Id}}">项目管理</a></li>
 <li class="breadcrumb-item active" aria-current="page">{{.project.Name}}</li>
     </ol>
 </nav>
 <hr />
+</div>
+
+<div class="container-fluid mb-3" id="searchform">
+    <div class="row row-cols-lg-auto g-3 align-items-center">
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">状态</span>
+    <select vtype="int" itag="val" name="search_state"
+        class="form-select"
+        onchange="_page( 1 );"
+    >
+<option value="0">正常</option>
+<option value="1">归档</option>
+<option value="-1">全部</option>
+    </select>
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">项目</span>
+    <select vtype="int" itag="val" name="project_id"
+        class="form-select"
+        onchange="_page( 1 );"
+    >
+        <option value="0">全部</option>
+{{template "selection_map.html" (dict "values" .projects "selected" 0) }}
+    </select>
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">名字</span>
+    <input itag="val" name="name"
+        type="text"
+        class="form-control"
+    />
+</div></div>
+
+<div class="col-12"><div class="input-group">
+    <span class="input-group-text">时间</span>
+    <input vtype="date2unix" itag="val" name="created_at0"
+        type="date"
+        class="form-control"
+    />
+    <input vtype="date2unix" itag="val" name="created_at9"
+        type="date"
+        class="form-control"
+    />
+</div></div>
 
 
-<table class="table table-bordered table-striped table-hover align-middle text-center">
-    <tbody>
-        <tr>
-<th width="50">#</th>
-<th width="200">名称</th>
-<th width="80">排序</th>
-<th width="200">创建时间</th>
-<th width="200">开始时间</th>
-<th width="200">结束时间</th>
-<th scope="col" class="text-start">
-    <button class="btn btn-warning" onclick="_modify(0)">
-        <i class="fa-solid fa-plus"></i> 新增</button>
-</th>
-        </tr>
-
-{{range $key, $tag := .tags}}
-<tr id="tag-{{$tag.Id}}">
-<td>{{$tag.Id}}</td>
-<td><a href="/task/tag/{{$tag.Id}}">{{$tag.Name}}</a></td>
-<td>{{$tag.Paixu}}</td>
-<td>{{$tag.CreatedAt | unixToDay}}</td>
-<td>{{$tag.StartAt | unixToDay}}</td>
-<td>{{$tag.EndAt | unixToDay}}</td>
-
-<td class="text-start">
-    <button class="btn btn-primary" onclick="_modify({{$tag.Id}})">
-        <i class="fa-solid fa-pen-to-square"></i> 修改</button>
-    <button class="btn btn-primary ms-5" onclick="ajax('/tag/stats/{{$tag.Id}}')">
-        <i class="fa-solid fa-chart-simple"></i> 统计</button>
-    <button class="btn btn-primary ms-5" onclick="_show_gantt({{$tag.Id}})">
-        <i class="fa-solid fa-chart-gantt"></i> 甘特图</button>
-
-    <button class="btn btn-danger ms-5" onclick="_del({{$tag.Id}})">
-        <i class="fa-solid fa-trash"></i> 删除</button>
-
-</td>
-</tr>
-{{end}}
-
-<tr>
-<td scope="row" colSpan="7">
-{{pages .page "_page"}}
-</td>
-</tr>
-
-    </tbody>
-</table>
+<div class="col-12">
+    <button class="btn btn-primary me-2" onclick="_page(1);">查询</button>
+</div>
 
 
+    </div>
+</div>
 
+<div class="container-fluid" id="data-table">
+{{template "tags-content.html" .}}
 </div>
 
 
@@ -116,7 +123,8 @@ function _del(id) {
                 action: function () {
                     var data = {}
                     ajax("/tag/delete/" + id, data, function(r) {
-                        $("#tag-"+r.id).remove();
+                        _page();
+                        showSuccessToast("删除成功");
                     })
                 }
             }
@@ -126,26 +134,25 @@ function _del(id) {
 function _commit() {
     var data = getFormData("#edit-tag-form")
     data.project_id = _project_id;
-    if (data.is_loack == "true") {
-        data.is_lock = true;
-    } else {
-        data.is_lock = false;
-    }
 
     data.start_at = new Date(data.start_at).getTime() / 1000;
     data.end_at = new Date(data.end_at).getTime() / 1000;
 
     ajax("/tag/save", data, function(r) {
-        //获取当前地址，取 # 号前面的值
-        var url = window.location.href.split("#")[0];
-        window.location.href = url + "#project-"+r.id;
-        window.location.reload();
+        _page()
+        $("#dialog").modal("hide");
+        showSuccessToast("保存成功");
     })
 }
 
-//翻页
+var _currentPage = 1;
 function _page(n) {
-    window.location.href = "/manage/tags/"+_project_id+"/"+n;
+    if (n) {
+        _currentPage = n;
+    }
+    const data = getFormData("#searchform");
+    data.page = _currentPage;
+    ajax("/tag/search", data)
 }
 
 </script>

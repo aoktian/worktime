@@ -1,4 +1,9 @@
-{{template "header.html" .}}</head><body>
+{{template "header.html" .}}
+
+<link href="/static/select2/select2.min.css" rel="stylesheet" />
+<link href="/static/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+</head><body>
 {{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
 
 <div class="container-fluid">
@@ -66,6 +71,7 @@
 {{template "selection_map.html" (dict "values" .props.priority "selected" .task.Priority) }}
 </select>
 <input vtype="int" type="number" class="form-control" itag="val" name="level" value="{{.task.Level}}" />
+<span class="input-group-text" onclick="_task_priority_change(99999)"><i class="fa-solid fa-circle-question"></i></span>
 
 </div></div>
 
@@ -73,20 +79,12 @@
 <div class="row row-cols-lg-auto g-3 align-items-center mb-2">
 
 <div class="col-12"><div class="input-group">
-    <select vtype="int" itag="val" name="project"
-        class="form-select"
-        value="{{.task.Project}}"
-        onchange="onChangePro( this.value, '#filterTags', '版本' );"
-    >
-        <option value="0">项目</option>
-{{template "selection_map.html" (dict "values" .projects "selected" .task.Project) }}
+    <div class="input-group-text"></div>
+    <select id="filterProjects" vtype="int" itag="val" name="project" class="form-select">
+<option value="{{.selectorProject.Id}}" selected>{{.selectorProject.Name}}</option>
     </select>
-    <select vtype="int" id="filterTags" itag="val" name="tag"
-        class="form-select"
-        value="{{.task.Tag}}"
-    >
-        <option value="0">版本</option>
-{{template "selection_tag.html" (dict "values" .tags "selected" .task.Tag "filterId" .task.Project) }}
+    <select project_id="{{.selectorProject.Id}}" vtype="int" id="filterTags" itag="val" name="tag" class="form-select">
+<option value="{{.selectorTag.Id}}" selected>{{.selectorTag.Name}}</option>
     </select>
 </div></div>
 
@@ -94,52 +92,49 @@
     <!-- 创建新任务，必须选择手动选择部门 复制的任务也需要手动选择部门-->
     <div class="input-group-text">执行</div>
     <select vtype="int" itag="val" name="leader_dept"
-        class="form-select"
-        value="0"
-        onchange="onChangeDepartment( this.value, '#filterLeader', '成员' );"
+        class="form-select" style="width: 80px;"
+        onchange="onChangePro(this, '#filterLeader');"
     >
         <option value="0">部门</option>
-{{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
+{{template "selection_map.html" (dict "values" .props.department "selected" .task.LeaderDept) }}
     </select>
-    <select vtype="int" id="filterLeader" itag="val" name="leader"
+    <select project_id="{{.task.LeaderDept}}" vtype="int" id="filterLeader" itag="val" name="leader"
         class="form-select"
-        value="0"
     >
-        <option value="0">成员</option>
-{{template "selection_user.html" (dict "values" .users "selected" 0 "filterId" 0) }}
+<option value="{{.leader.Id}}" selected>{{.leader.Name}}</option>
     </select>
 </div></div>
 
 <div class="col-12"><div class="input-group">
     <div class="input-group-text">验收</div>
     <select vtype="int" itag="val" name="checker_dept"
-        class="form-select"
-        onchange="onChangeDepartment( this.value, '#filterChecker', '成员' );"
+        class="form-select" style="width: 80px;"
+        onchange="onChangePro(this, '#filterChecker');"
     >
         <option value="0">部门</option>
-{{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
+{{template "selection_map.html" (dict "values" .props.department "selected" .task.CheckerDept) }}
     </select>
-    <select vtype="int" id="filterChecker" itag="val" name="checker"
+    <select project_id="{{.task.CheckerDept}}" vtype="int" id="filterChecker" itag="val" name="checker"
         class="form-select"
     >
-        <option value="0">成员</option>
+<option value="{{.checker.Id}}" selected>{{.checker.Name}}</option>
     </select>
 </div></div>
 
 <div class="col-12"><div class="input-group">
     <div class="input-group-text">测试</div>
     <select vtype="int" itag="val" name="tester_dept"
-        class="form-select"
-        onchange="onChangeDepartment( this.value, '#filterTester', '成员' );"
+        class="form-select" style="width: 80px;"
+        onchange="onChangePro(this, '#filterTester');"
     >
         <option value="0">部门</option>
-{{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
+{{template "selection_map.html" (dict "values" .props.department "selected" .task.TesterDept) }}
     </select>
-    <select vtype="int" id="filterTester" itag="val" name="tester"
+    <select project_id="{{.task.TesterDept}}" vtype="int" id="filterTester" itag="val" name="tester"
         class="form-select"
         value="{{.task.Tester}}"
     >
-        <option value="0">成员</option>
+<option value="{{.tester.Id}}" selected>{{.tester.Name}}</option>
     </select>
 
 </div></div>
@@ -161,7 +156,7 @@
     value="{{.task.Status}}"
 >
     <option value="0">状态</option>
-{{template "selection_map.html" (dict "values" .props.status "selected" 300) }}
+{{template "selection_map.html" (dict "values" .props.status "selected" 12) }}
 </select>
 <span class="input-group-text" onclick="$('#modal-status-tips').modal('show')"><i class="fa-solid fa-circle-question"></i></span>
 </div></div>
@@ -172,7 +167,7 @@
 
         <hr />
 
-<textarea id="task-content" name="content"></textarea>
+<textarea id="task-content" name="content">{{if gt .task.Id 0}}~内容将继承主任务~{{end}}</textarea>
 
 
 <div class="mt-3"></div>
@@ -190,8 +185,6 @@
 {{template "help-status.html"}}
 
 <script type="text/javascript">
-var users = {{.users | json}};
-var tags = {{.tags | json}};
 
 $(document).ready(function() {
     initEditor("#task-content", false, 600);
@@ -252,7 +245,7 @@ function _save() {
     if (data.tag == 0) {
         return showErrorToast("请选择版本")
     }
-    if (data.leader == 0) {
+    if (data.leader * data.checker * data.tester == 0) {
         return showErrorToast("请选择执行成员")
     }
 
@@ -271,8 +264,18 @@ function _save() {
     })
 }
 
+
+$(document).ready(function() {
+    initProjectSelect2("#filterProjects", "#filterTags", false)
+    initTagSelect2("/tag/selector", "#filterTags", false);
+    initTagSelect2("/user/selector", "#filterLeader", false);
+    initTagSelect2("/user/selector", "#filterChecker", false);
+    initTagSelect2("/user/selector", "#filterTester", false);
+});
+
 </script>
 
+<script src="/static/tagselector.js?t=20260228"></script>
 
 </body></html>
 

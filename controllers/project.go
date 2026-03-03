@@ -6,6 +6,7 @@ import (
 	"webserver/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-xorm/builder"
 )
 
 type Project struct {
@@ -13,7 +14,9 @@ type Project struct {
 
 func (x *Project) URLPatterns() []utils.Route {
 	return []utils.Route{
-		{Method: http.MethodGet, Path: "/project/list", ResourceFunc: x.List},
+		{Method: http.MethodGet, Path: "/project/list", ResourceFunc: x.index},
+		{Method: http.MethodPost, Path: "/project/search", ResourceFunc: x.search},
+		{Method: http.MethodPost, Path: "/project/selector", ResourceFunc: x.selector},
 
 		{Method: http.MethodPost, Path: "project/modify/:id", ResourceFunc: x.Modify},
 		{Method: http.MethodPost, Path: "/project/save", ResourceFunc: x.Save},
@@ -32,14 +35,97 @@ func getProjects() map[int]*models.Project {
 	return result
 }
 
-func (x *Project) List(ctx *gin.Context) {
+func (x *Project) selector(ctx *gin.Context) {
+	params := &selectorReq{}
+	if !utils.ShouldBindJSON(ctx, params) {
+		return
+	}
+
+	pageSize := 20
+	offset := (params.Page - 1) * pageSize
+
 	results := make([]*models.Project, 0)
-	models.DB.Find(&results)
+	if params.Keyword == "" {
+		models.DB.Where("is_archived = 0").
+			Limit(pageSize, offset).Find(&results)
+	} else {
+		models.DB.Where("name like ?", "%"+params.Keyword+"%").
+			Limit(pageSize, offset).Find(&results)
+	}
+
+	more := false
+	if len(results) == pageSize {
+		more = true
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"results":    results,
+		"pagination": gin.H{"more": more},
+	})
+}
+
+type projectSearch struct {
+	models.Project
+	Page        int64 `json:"page"`
+	CreatedAt0  int64 `json:"created_at0"`
+	CreatedAt9  int64 `json:"created_at9"`
+	SearchState int   `json:"search_state"`
+}
+
+func (x *Project) index(ctx *gin.Context) {
+	x.list(ctx, &projectSearch{})
+	utils.HTML(ctx, "projects.html", nil)
+}
+
+func (x *Project) search(ctx *gin.Context) {
+	params := &projectSearch{}
+	if !utils.ShouldBindJSON(ctx, params) {
+		return
+	}
+	x.list(ctx, params)
+	ctx.JSON(http.StatusOK, gin.H{
+		"#data-table": utils.GetRenderedTemplateContent(ctx, "projects-content.html"),
+	})
+}
+
+func (x *Project) list(ctx *gin.Context, con *projectSearch) {
+	where := builder.NewCond()
+
+	if con.Name != "" {
+		where = where.And(builder.Like{"name", con.Name})
+	}
+	if con.CreatedAt0 > 0 {
+		where = where.And(builder.Gte{"created_at": con.CreatedAt0})
+	}
+	if con.CreatedAt9 > 0 {
+		where = where.And(builder.Lte{"created_at": con.CreatedAt9})
+	}
+	if con.SearchState > -1 {
+		where = where.And(builder.Eq{"is_archived": con.SearchState})
+	}
+
+	sqlWhere, args, err := builder.ToSQL(where)
+	if err != nil {
+		utils.Error(ctx, err)
+		return
+	}
+
+	var pageSize int64 = 12
+	pagination := &utils.Pagination{Page: int64(con.Page), Size: pageSize}
+	total, err := models.DB.Where(sqlWhere, args...).Count(new(models.Project))
+	if err != nil {
+		utils.Error(ctx, err)
+		return
+	}
+	pagination.Total = total
+
+	results := make([]*models.Project, 0)
+	models.DB.Where(sqlWhere, args...).
+		Limit(int(pagination.Size), int(pagination.GetOffset())).Find(&results)
 
 	h := ctx.MustGet("templateData").(map[string]any)
 	h["projects"] = results
+	h["page"] = pagination
 
-	utils.HTML(ctx, "projects.html", nil)
 }
 
 func (x *Project) Modify(ctx *gin.Context) {
@@ -64,7 +150,7 @@ func (x *Project) Save(ctx *gin.Context) {
 
 	var err error
 	if update.Id > 0 {
-		_, err = models.DB.ID(update.Id).Update(update)
+		_, err = models.DB.ID(update.Id).AllCols().Update(update)
 	} else {
 		_, err = models.DB.InsertOne(update)
 	}

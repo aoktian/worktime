@@ -5,7 +5,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 <div class="modal-body" id="edit-tag-form">
-    <input type="hidden" name="id" value="{{.tag.Id}}" />
+    <input vtype="int" type="hidden" name="id" value="{{.tag.Id}}" />
 <div class="mb-2">
     <label class="form-label">输入名称</label>
     <input class="form-control" type="text"
@@ -24,15 +24,25 @@
 </div>
 
 <div class="mb-2">
+    <label class="form-label">归档</label>
+    <select vtype="bool" name="is_archived"
+        class="form-select"
+    >
+        <option value="0" {{if eq .tag.IsArchived false}}selected{{end}}>否</option>
+        <option value="1" {{if eq .tag.IsArchived true}}selected{{end}}>是</option>
+    </select>
+</div>
+
+<div class="mb-2">
     <label class="form-label">开始时间</label>
-    <input class="form-control" type="date"
+    <input vtype="date2unix" class="form-control" type="date"
         value="{{.tag.StartAt | unixToDay}}"
         name="start_at"
     />
 </div>
 <div class="mb-2">
     <label class="form-label">结束时间</label>
-    <input class="form-control" type="date"
+    <input vtype="date2unix" class="form-control" type="date"
         value="{{.tag.EndAt | unixToDay}}"
         name="end_at"
     />

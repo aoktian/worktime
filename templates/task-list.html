@@ -23,8 +23,8 @@
     <th scope="row">
         <input class="form-check-input" name="task-checkbox" type="checkbox" value="{{$value.Id}}" />
     </th>
-    <td>{{(index $.projects $value.Project).Name}}</td>
-    <td>{{(index $.tags $value.Tag).Name}}</td>
+    <td>{{$value.ProjectName}}</td>
+    <td>{{$value.TagName}}</td>
     <td>{{(index $.props.status $value.Status).Name}}</td>
     <td>{{(index $.props.priority $value.Priority).Name}}({{$value.Level}})</td>
     <td>{{(index $.props.caty $value.Caty).Name}}</td>
@@ -47,7 +47,7 @@
 
 <tr>
 <td scope="row" colspan="12">
-{{pages .pagination "filter_result"}}
+{{pages .pagination "_taskList"}}
 </td>
 </tr>
 
