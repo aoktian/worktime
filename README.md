@@ -19,6 +19,15 @@ go build -o worktime
 pause
 ```
 
+## 开发编译参数
+
+开发时候，可以不把静态文件打包到可执行文件。
+方便调试静态文件 。
+
+```shell
+go build -tags="dev" -o worktime.exe
+```
+
 ## 服务器后台运行
 ```shell
 nohup ./worktime start > /dev/null 2>&1 &
@@ -71,15 +80,13 @@ chmod +x service.sh
 - 详细的操作日志
 - 灵活的配置系统
 
-## 项目结构
+## 运行环境
 
 ```
 .
-├── controllers/            # 后端控制器
-├── models/                 # 数据模型
-├── middlewares/            # 中间件
-├── utils/                  # 工具函数
-└── conf/                   # 配置文件
+├── worktime                  # linux运行文件
+├── worktime.exe              # windows运行文件
+└── conf/                   # 配置文件，自行修改
     ├── application.yaml    # 主配置文件
     ├── caty.yaml           # 分类
     ├── department.yaml     # 部门
