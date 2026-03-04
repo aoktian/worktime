@@ -30,6 +30,9 @@
     <a class="btn btn-primary ms-5" href="/project/tag/{{$project.Id}}">
         <i class="fa-solid fa-list"></i> 管理版本</a>
 
+    <a class="btn btn-primary ms-5" href="javascript:ajax('/tag/modify', {project_id: {{$project.Id}}});">
+        <i class="fa-solid fa-plus"></i> 新加版本</a>
+
     <button class="btn btn-danger ms-5" onclick="_del({{$project.Id}})">
         <i class="fa-solid fa-trash"></i> 删除
     </button>

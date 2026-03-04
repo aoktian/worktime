@@ -114,30 +114,33 @@ function initProjectSelect2(selector, tagSelect, refreshTaskList) {
     })
     // 关键：绑定 Select2 专用选择事件
     .on('select2:select', function (e) {
+        if (tagSelect) {
+            var $tagSelect = $(tagSelect);
+            $tagSelect.attr("project_id", $(this).val())
 
-        console.log("-------->", $(this).val())
-        var $tagSelect = $(tagSelect);
-        $tagSelect.attr("project_id", $(this).val())
-
-        // 清空现有选项，只保留默认的“版本”占位符
-        $tagSelect.empty().append('<option value="0" selected>全部</option>');
-        $tagSelect.val(0).trigger('change');
-
-
+            // 清空现有选项，只保留默认的“版本”占位符
+            $tagSelect.empty().append('<option value="0" selected>全部</option>');
+            $tagSelect.val(0).trigger('change');
+        }
+        if (refreshTaskList) {
+            refreshTaskList(1)
+        }
     })
     // 可选：绑定清除事件（如果点了那个小叉叉）
     .on('select2:unselect', function (e) {
         $(this).val(0).trigger('change');
 
-        var $tagSelect = $(tagSelect);
-        $tagSelect.attr("project_id", 0)
+        if (tagSelect) {
+            var $tagSelect = $(tagSelect);
+            $tagSelect.attr("project_id", 0)
 
-        // 清空现有选项，只保留默认的“版本”占位符
-        $tagSelect.empty().append('<option value="0" selected>全部</option>');
-        $tagSelect.val(0).trigger('change');
+            // 清空现有选项，只保留默认的“版本”占位符
+            $tagSelect.empty().append('<option value="0" selected>全部</option>');
+            $tagSelect.val(0).trigger('change');
+        }
 
         if (refreshTaskList) {
-            _taskList(1);
+            refreshTaskList(1);
         }
     });
 }

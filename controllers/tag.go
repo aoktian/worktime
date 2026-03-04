@@ -20,7 +20,7 @@ func (x *Tag) URLPatterns() []utils.Route {
 		{Method: http.MethodGet, Path: "/project/tag/:project_id", ResourceFunc: x.InProject},
 		{Method: http.MethodPost, Path: "/tag/search", ResourceFunc: x.search},
 		{Method: http.MethodPost, Path: "/tag/selector", ResourceFunc: x.selector},
-		{Method: http.MethodPost, Path: "/tag/modify/:id", ResourceFunc: x.Modify},
+		{Method: http.MethodPost, Path: "/tag/modify", ResourceFunc: x.Modify},
 		{Method: http.MethodPost, Path: "/tag/save", ResourceFunc: x.Save},
 		{Method: http.MethodPost, Path: "/tag/delete/:id", ResourceFunc: x.Delete},
 		{Method: http.MethodPost, Path: "/tag/stats/:id", ResourceFunc: x.Stats},
@@ -99,6 +99,23 @@ func (x *Tag) search(ctx *gin.Context) {
 	})
 }
 
+type listTag struct {
+	Id        int64  `json:"id" xorm:"pk autoincr notnull comment('主键')"`
+	Name      string `json:"name" xorm:"notnull unique(projectid_name) comment('版本名称')"`
+	ProjectId int    `json:"project_id" xorm:"notnull unique(projectid_name) comment('项目id')"`
+
+	Paixu      int  `json:"paixu"`
+	IsArchived bool `json:"is_archived"`
+
+	StartAt int64 `json:"start_at" xorm:"comment('开始时间')"`
+	EndAt   int64 `json:"end_at" xorm:"comment('结束时间')"`
+
+	CreatedAt int64 `json:"created_at" xorm:"comment('创建时间') created"`
+	UpdatedAt int64 `json:"updated_at" xorm:"comment('更新时间') updated"`
+
+	ProjectName string `json:"project_name"`
+}
+
 func (x *Tag) list(ctx *gin.Context, con *tagSearch) {
 	where := builder.NewCond()
 	if con.ProjectId > 0 {
@@ -115,7 +132,7 @@ func (x *Tag) list(ctx *gin.Context, con *tagSearch) {
 	}
 
 	if con.SearchState > -1 {
-		where = where.And(builder.Eq{"is_archived": con.SearchState})
+		where = where.And(builder.Eq{"tag.is_archived": con.SearchState})
 	}
 
 	sqlWhere, args, err := builder.ToSQL(where)
@@ -127,6 +144,8 @@ func (x *Tag) list(ctx *gin.Context, con *tagSearch) {
 	project := &models.Project{}
 	if con.ProjectId > 0 {
 		models.DB.Id(con.ProjectId).Get(project)
+	} else {
+		project.Name = "全部"
 	}
 
 	var pageSize int64 = 12
@@ -138,9 +157,11 @@ func (x *Tag) list(ctx *gin.Context, con *tagSearch) {
 	}
 	pagination.Total = total
 
-	results := make([]*models.Tag, 0)
-	err = models.DB.Where(sqlWhere, args...).
-		OrderBy("paixu desc, id desc").
+	results := make([]*listTag, 0)
+	err = models.DB.Table("tag").Select("tag.*, project.name as project_name").
+		Join("LEFT", "project", "project.id = tag.project_id").
+		Where(sqlWhere, args...).
+		OrderBy("paixu desc, tag.id desc").
 		Limit(int(pagination.Size), int(pagination.GetOffset())).Find(&results)
 	if err != nil {
 		utils.JSONError(ctx, err)
@@ -151,22 +172,33 @@ func (x *Tag) list(ctx *gin.Context, con *tagSearch) {
 	h["tags"] = results
 	h["page"] = pagination
 	h["project"] = project
-	h["projects"] = getProjects()
 }
 
 func (x *Tag) Modify(ctx *gin.Context) {
-	id := GetParamInt(ctx, "id")
+	params := &models.Tag{}
+	if !utils.ShouldBindJSON(ctx, params) {
+		return
+	}
 
+	project := &models.Project{}
 	tag := &models.Tag{}
-	if id > 0 {
-		models.DB.Id(id).Get(tag)
+	if params.Id > 0 {
+		models.DB.Id(params.Id).Get(tag)
+		models.DB.Id(tag.ProjectId).Get(project)
 	} else {
 		tag.StartAt = time.Now().Unix()
 		tag.EndAt = time.Now().Unix()
+		if params.ProjectId > 0 {
+			models.DB.Id(params.ProjectId).Get(project)
+		}
+	}
+	if project.Id <= 0 {
+		project.Name = "项目"
 	}
 
 	h := ctx.MustGet("templateData").(map[string]any)
 	h["tag"] = tag
+	h["project"] = project
 
 	utils.Dialog(ctx, "tag-edit.html", nil)
 }
@@ -174,6 +206,11 @@ func (x *Tag) Modify(ctx *gin.Context) {
 func (x *Tag) Save(ctx *gin.Context) {
 	update := &models.Tag{}
 	if !utils.ShouldBindJSON(ctx, update) {
+		return
+	}
+
+	if update.ProjectId <= 0 {
+		utils.JSONErrMsg(ctx, "项目id不能为空")
 		return
 	}
 

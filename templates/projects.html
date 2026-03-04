@@ -109,5 +109,14 @@ function _commit() {
     })
 }
 
+function _committag() {
+    var data = getFormData("#edit-tag-form")
+
+    ajax("/tag/save", data, function(r) {
+        $("#dialog").modal("hide");
+        showSuccessToast("保存成功");
+    })
+}
+
 </script>
 </body></html>

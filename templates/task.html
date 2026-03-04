@@ -8,9 +8,6 @@
 }
 </style>
 
-<link href="/static/select2/select2.min.css" rel="stylesheet" />
-<link href="/static/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-
 </head><body>
 {{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
 
@@ -256,11 +253,10 @@ function _taskList( page ) {
 
 </script>
 
-<script src="/static/tagselector.js?t=20260228"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     setInterval( "_taskList();", 1000 * 60 * 5 );
-    initProjectSelect2("#filterProjects", "#filterTags", true)
+    initProjectSelect2("#filterProjects", "#filterTags", _taskList)
 
     initTagSelect2("/tag/selector", "#filterTags", true);
     initTagSelect2("/user/selector", "#filterLeader", true);

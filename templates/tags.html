@@ -57,13 +57,9 @@
 
 <div class="col-12"><div class="input-group">
     <span class="input-group-text">项目</span>
-    <select vtype="int" itag="val" name="project_id"
-        class="form-select"
-        onchange="_page( 1 );"
-    >
-        <option value="0">全部</option>
-{{template "selection_map.html" (dict "values" .projects "selected" 0) }}
-    </select>
+<select id="filterProjects" itag="val" vtype="int" name="project_id" class="form-select">
+<option value="{{.project.Id}}" selected>{{.project.Name}}</option>
+</select>
 </div></div>
 
 <div class="col-12"><div class="input-group">
@@ -103,8 +99,12 @@
 {{template "footer.html" .}}
 <script type="text/javascript">
 var _project_id = {{.project.Id}};
+$(document).ready(function() {
+    initProjectSelect2("#filterProjects", false, _page)
+})
+
 function _modify(id) {
-    ajax("/tag/modify/" + id)
+    ajax("/tag/modify", {id: id})
 }
 function _del(id) {
     $.confirm({
@@ -131,12 +131,8 @@ function _del(id) {
         }
     });
 }
-function _commit() {
+function _committag() {
     var data = getFormData("#edit-tag-form")
-    data.project_id = _project_id;
-
-    data.start_at = new Date(data.start_at).getTime() / 1000;
-    data.end_at = new Date(data.end_at).getTime() / 1000;
 
     ajax("/tag/save", data, function(r) {
         _page()

@@ -1,8 +1,5 @@
 {{template "header.html" .}}
 
-<link href="/static/select2/select2.min.css" rel="stylesheet" />
-<link href="/static/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-
 </head><body>
 {{template "nav.html" (dict "navtab" "task" "authUser" .authUser )}}
 
@@ -26,74 +23,76 @@
 <div class="container-fluid">
 
 <div class="card mt-3 mb-3">
-    <div class="card-header d-flex align-items-center">
-        <div><b>#{{.task.Id}} <span class="task-title">{{.task.Title}}</span></b></div>
-        <div class="ms-auto">
-            <button
-                class="btn btn-link "
-                onclick="_modify_task()"
-            >
-            <i class="fa-solid fa-pen-to-square"></i>
-                编辑
-            </button>
+<div class="card-header d-flex align-items-center">
+    <div onclick="$('#task-detail').toggle();"><b>#{{.task.Id}} <span class="task-title">{{.task.Title}}</span></b></div>
+    <div class="ms-auto">
+        <button
+            class="btn btn-link "
+            onclick="_modify_task()"
+        >
+        <i class="fa-solid fa-pen-to-square"></i>
+            编辑
+        </button>
 
-            <a
-                class="btn btn-link ms-2"
-                href="/task/new/{{.task.Id}}"
-                data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="复制内容，创建子任务"
-            >
-                <i class="fa-solid fa-clone"></i>
-                复制
-            </a>
+        <a
+            class="btn btn-link ms-2"
+            href="/task/new/{{.task.Id}}"
+            data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="复制内容，创建子任务"
+        >
+            <i class="fa-solid fa-clone"></i>
+            复制
+        </a>
 
 
-            <button
-                class="btn btn-link ms-2"
-                onclick="$('#dialog-addrelated').modal('show');"
-            >
-            <i class="fa-solid fa-magnet"></i>
-                关联
-            </button>
+        <button
+            class="btn btn-link ms-2"
+            onclick="$('#dialog-addrelated').modal('show');"
+        >
+        <i class="fa-solid fa-magnet"></i>
+            关联
+        </button>
 
-            <a
-                class="btn btn-link ms-2"
-                href="#new-comment-anchor"
-            >
-                <i class="fa-solid fa-message"></i> 回复
-            </a>
+        <a
+            class="btn btn-link ms-2"
+            href="#new-comment-anchor"
+        >
+            <i class="fa-solid fa-message"></i> 回复
+        </a>
 
-            <button
-                class="btn btn-link ms-2"
-                onclick="ajax('/task/log/{{.task.Id}}')"
-            >
-                <i class="fa-solid fa-calendar-days"></i>日志
-            </button>
+        <button
+            class="btn btn-link ms-2"
+            onclick="ajax('/task/log/{{.task.Id}}')"
+        >
+            <i class="fa-solid fa-calendar-days"></i>日志
+        </button>
 
-        </div>
     </div>
+</div>
 
-    <div class="card-body" id="task-modify-form">
+<div id="task-detail">
+
+<div class="card-body" id="task-modify-form">
 <p><i>
-    <span class="me-5">作者：{{.author.Name}} ({{.task.CreatedAt | formatDate}} <span class="text-primary">{{.task.CreatedAt | SecondsToTime}}</span> )
-    </span><span id="task-last-modify">修改：{{.editor.Name}} ({{.task.UpdatedAt | formatDate}})
-    </span>
+<span class="me-5">作者：{{.author.Name}} ({{.task.CreatedAt | formatDate}} <span class="text-primary">{{.task.CreatedAt | SecondsToTime}}</span> )
+</span><span id="task-last-modify">修改：{{.editor.Name}} ({{.task.UpdatedAt | formatDate}})
+</span>
 </i></p>
 <hr />
 
 <!-- 快速修改-->
 <div>
-    <div class="row row-cols-lg-auto g-3 align-items-center">
+<div class="row row-cols-lg-auto g-3 align-items-center">
 
 <div class="col-12"><div class="input-group">
-  <span class="input-group-text">标题</span>
-  <input type="text" class="form-control" value="{{.task.Title}}" name="title" style="width: 800px;" />
+<span class="input-group-text">标题</span>
+<input type="text" class="form-control" value="{{.task.Title}}" name="title" style="width: 800px;" />
 </div></div>
 
 <div class="col-12"><div class="input-group">
 
 <select  vtype="int" itag="val" name="caty"
-    class="form-select"
-    value="{{.task.Caty}}"
+class="form-select"
+value="{{.task.Caty}}"
 >
 {{template "selection_map.html" (dict "values" .props.caty "selected" .task.Caty) }}
 </select>
@@ -102,9 +101,9 @@
 
 <div class="col-12"><div class="input-group">
 <select vtype="int" itag="val" name="priority"
-    class="form-select"
-    value="{{.task.Priority}}"
-    onchange="_task_priority_change(this.value)"
+class="form-select"
+value="{{.task.Priority}}"
+onchange="_task_priority_change(this.value)"
 >
 {{template "selection_map.html" (dict "values" .props.priority "selected" .task.Priority) }}
 </select>
@@ -112,72 +111,72 @@
 <span class="input-group-text" onclick="_task_priority_change(99999)"><i class="fa-solid fa-circle-question"></i></span>
 </div></div>
 
-    </div>
+</div>
 
 <div class="row row-cols-lg-auto g-3 align-items-center mt-2">
 
 <div class="col-12"><div class="input-group">
-    <div class="input-group-text"></div>
-    <select id="filterProjects" vtype="int" itag="val" name="project" class="form-select">
+<div class="input-group-text"></div>
+<select id="filterProjects" vtype="int" itag="val" name="project" class="form-select">
 <option value="{{.selectorProject.Id}}" selected="selected">{{.selectorProject.Name}}</option>
-    </select>
-    <select project_id="{{.selectorProject.Id}}" vtype="int" id="filterTags" itag="val" name="tag"
-        class="form-select"
-        value="{{.task.Tag}}"
-    >
+</select>
+<select project_id="{{.selectorProject.Id}}" vtype="int" id="filterTags" itag="val" name="tag"
+    class="form-select"
+    value="{{.task.Tag}}"
+>
 <option value="{{.selectorTag.Id}}" selected="selected">{{.selectorTag.Name}}</option>
-    </select>
+</select>
 
 </div></div>
 
 <div class="col-12"><div class="input-group">
-    <div class="input-group-text">执行</div>
-    <select vtype="int" itag="val" name="leader_dept"
-        class="form-select" style="width: 80px;"
-        value="{{.task.LeaderDept}}"
-        onchange="onChangePro(this, '#filterLeader' );"
-    >
+<div class="input-group-text">执行</div>
+<select vtype="int" itag="val" name="leader_dept"
+    class="form-select" style="width: 80px;"
+    value="{{.task.LeaderDept}}"
+    onchange="onChangePro(this, '#filterLeader' );"
+>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.LeaderDept) }}
-    </select>
-    <select project_id="{{.task.LeaderDept}}" vtype="int" id="filterLeader" itag="val" name="leader"
-        class="form-select"
-    >
+</select>
+<select project_id="{{.task.LeaderDept}}" vtype="int" id="filterLeader" itag="val" name="leader"
+    class="form-select"
+>
 <option value="{{.leader.Id}}" selected>{{.leader.Name}}</option>
-    </select>
+</select>
 </div></div>
 
 <div class="col-12"><div class="input-group">
-    <div class="input-group-text">验收</div>
-    <select vtype="int" itag="val" name="checker_dept"
-        class="form-select" style="width: 80px;"
-        value="{{.task.CheckerDept}}"
-        onchange="onChangePro(this, '#filterChecker' );"
-    >
-    <option value="0">部门</option>
+<div class="input-group-text">验收</div>
+<select vtype="int" itag="val" name="checker_dept"
+    class="form-select" style="width: 80px;"
+    value="{{.task.CheckerDept}}"
+    onchange="onChangePro(this, '#filterChecker' );"
+>
+<option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.CheckerDept) }}
-    </select>
-    <select project_id="{{.task.CheckerDept}}" vtype="int" id="filterChecker" itag="val" name="checker"
-        class="form-select"
-    >
+</select>
+<select project_id="{{.task.CheckerDept}}" vtype="int" id="filterChecker" itag="val" name="checker"
+    class="form-select"
+>
 <option value="{{.checker.Id}}" selected>{{.checker.Name}}</option>
-    </select>
+</select>
 </div></div>
 
 <div class="col-12"><div class="input-group">
-    <div class="input-group-text">测试</div>
-    <select vtype="int" itag="val" name="tester_dept"
-        class="form-select" style="width: 80px;"
-        value="{{.task.TesterDept}}"
-        onchange="onChangePro(this, '#filterTester' );"
-    >
-    <option value="0">部门</option>
+<div class="input-group-text">测试</div>
+<select vtype="int" itag="val" name="tester_dept"
+    class="form-select" style="width: 80px;"
+    value="{{.task.TesterDept}}"
+    onchange="onChangePro(this, '#filterTester' );"
+>
+<option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.TesterDept) }}
-    </select>
-    <select project_id="{{.task.TesterDept}}" vtype="int" id="filterTester" itag="val" name="tester"
-        class="form-select"
-    >
+</select>
+<select project_id="{{.task.TesterDept}}" vtype="int" id="filterTester" itag="val" name="tester"
+    class="form-select"
+>
 <option value="{{.tester.Id}}" selected>{{.tester.Name}}</option>
-    </select>
+</select>
 
 </div></div>
 
@@ -186,16 +185,16 @@
 <div class="row row-cols-lg-auto g-3 align-items-center mt-2">
 
 <div class="col-12"><div class="input-group">
-    <div class="input-group-text">时间</div>
-    <input vtype="date2unix" value="{{.task.StartAt | unixToDay}}" type="date" class="form-control" name="start_at" />
-    <input vtype="date2unix" value="{{.task.EndAt | unixToDay}}" type="date" class="form-control" name="end_at" />
-    <input vtype="date2unix" value="{{.task.ActualAt | unixToDay}}" type="date" class="form-control" name="actual_at" />
+<div class="input-group-text">时间</div>
+<input vtype="date2unix" value="{{.task.StartAt | unixToDay}}" type="date" class="form-control" name="start_at" />
+<input vtype="date2unix" value="{{.task.EndAt | unixToDay}}" type="date" class="form-control" name="end_at" />
+<input vtype="date2unix" value="{{.task.ActualAt | unixToDay}}" type="date" class="form-control" name="actual_at" />
 </div></div>
 
 <div class="col-12"><div class="input-group">
 <select vtype="int" itag="val" name="status"
-    class="form-select"
-    value="{{.task.Status}}"
+class="form-select"
+value="{{.task.Status}}"
 >
 {{template "selection_map.html" (dict "values" .props.status "selected" .task.Status) }}
 </select>
@@ -204,29 +203,29 @@
 
 <div class="col-12">
 <button class="btn btn-danger" onclick="_fast_modify()">
-    <i class="fa-solid fa-floppy-disk"></i> 一键保存
+<i class="fa-solid fa-floppy-disk"></i> 一键保存
 </button>
 </div>
 
 </div>
 
 
-    <div class="edit-buttons mt-3" style="display: none;">
+<div class="edit-buttons mt-3" style="display: none;">
 <button class="btn btn-danger" onclick="_fast_modify()">
-    <i class="fa-solid fa-floppy-disk"></i> 保存
+<i class="fa-solid fa-floppy-disk"></i> 保存
 </button>
 <button class="btn btn-secondary ms-2" onclick="_modify_task()">
-    <i class="fa-solid fa-ban"></i> 取消
+<i class="fa-solid fa-ban"></i> 取消
 </button>
-    </div>
+</div>
 </div>
 <!-- 快速修改 -->
 
 
-        <hr />
+    <hr />
 <div id="task-content">{{.task.Content|html}}</div>
 
-    </div><!-- card-body -->
+</div><!-- card-body -->
 
 <div class="card-footer edit-buttons" style="display: none;">
 <button class="btn btn-danger" onclick="_fast_modify()">
@@ -235,18 +234,22 @@
 <button class="btn btn-secondary ms-2" onclick="_modify_task()">
     <i class="fa-solid fa-ban"></i> 取消
 </button>
-</div>
+</div><!-- card-footer -->
 
-</div>
+</div><!-- task-detail -->
+
+
+
+</div><!--card-->
 
 {{if gt .task.Pid  0}}
 <div class="card mt-3">
 <div class="card-header">
-    <span class="badge text-bg-warning">主任务<b> <a target="_blank" href="/task/thread/{{.parent.Id}}">#{{.parent.Id}} {{.parent.Title}}</a></b></span>
+    <span class="badge text-bg-warning">主任务<b> <a target="_blank" href="/task/thread/{{.maintask.Id}}">#{{.maintask.Id}} {{.maintask.Title}}</a></b></span>
 </div>
 
 <div class="card-body">
-{{.parent.Content|html}}
+{{.maintask.Content|html}}
 </div>
 
 </div>
@@ -482,7 +485,6 @@ function _commit_comment(id) {
 }
 </script>
 
-<script src="/static/tagselector.js?t=20260228"></script>
 <script type="text/javascript">
 function _initBatchModifyTags() {
     initProjectSelect2("#batchModifyProjects", "#batchModifyTags", false)

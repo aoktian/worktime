@@ -492,9 +492,9 @@ func (x *Task) Get(ctx *gin.Context) {
 	templateData["task"] = task
 	templateData["tasks"] = results
 	if len(results) > 0 {
-		templateData["parent"] = results[0]
+		templateData["maintask"] = results[0]
 	} else {
-		templateData["parent"] = &models.Task{}
+		templateData["maintask"] = &models.Task{}
 	}
 
 	x.addListUsers(templateData, results)
@@ -640,8 +640,7 @@ func (x *Task) Related(ctx *gin.Context) {
 		"tasks":      tasks,
 		"pagination": &utils.Pagination{Page: 1, Total: int64(len(tasks)), Size: 10000},
 
-		"users":    getUsers(),
-		"projects": getProjects(),
+		"users": getUsers(),
 
 		"props": map[string]any{
 			"caty":       models.CatyDict,

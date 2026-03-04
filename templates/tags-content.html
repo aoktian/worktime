@@ -18,7 +18,7 @@
 {{range $key, $tag := .tags}}
 <tr>
 <td>{{$tag.Id}}</td>
-<td>{{(index $.projects $tag.ProjectId).Name}}</td>
+<td>{{$tag.ProjectName}}</td>
 <td><a href="/task/tag/{{$tag.Id}}">{{$tag.Name}}</a></td>
 <td>{{$tag.Paixu}}</td>
 <td>{{if $tag.IsArchived}}<span class="badge text-bg-danger">已归档</span>{{end}}</td>
