@@ -26,7 +26,11 @@
 <td>{{$user.Nick}}</td>
 <td>{{(index $.departments $user.Department).Name}}</td>
 <td>{{$user.Team}}</td>
-<td>{{(index $.psGroups $user.Ps).Name}}</td>
+<td>
+{{range $index, $ps := $user.PsGroup}}
+    {{(index $.psGroups $ps).Name}}
+{{end}}
+</td>
 <td>{{if $user.IsLeave}}<span class="badge text-bg-danger">已离职</span>{{end}}</td>
 <td>{{$user.CreatedAt | unixToDay}}</td>
 {{if $.authUser.IsAdmin}}

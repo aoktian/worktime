@@ -36,19 +36,16 @@
     <input disabled value="{{.user.Team}}" class="form-control" type="number"  />
 </div>
 
-<div class="col-md-4">
-    <label class="form-label">权限组</label>
-    <select disabled
-        class="form-select"
-    >
-{{template "selection_map.html" (dict "values" .psGroups "selected" .user.Ps) }}
-    </select>
-</div>
-
-<div class="col-md-4">
+<div class="col-md-12">
     <label class="form-label">密码</label>
     <input name="password" class="form-control" type="text" placeholder="留空不修改"  />
 </div>
+
+<div class="col-md-12">
+    <label class="form-label">权限组</label>
+    <input disabled value="{{range $index, $ps := .user.PsGroup}}{{(index $.psGroups $ps).Name}} {{end}}" class="form-control"  />
+</div>
+
 
 </div>
 

@@ -258,9 +258,13 @@ func (x *User) Save(ctx *gin.Context) {
 		return
 	}
 
-	if target.Ps != user.Ps || target.Name != user.Name {
-		if !utils.GetPathPermission().HasPermission(authUser.Ps, "/permission/modify") {
-			utils.JSONErrMsg(ctx, "没有权限")
+	if !utils.GetPathPermission().HasGroups(authUser.PsGroup, "/permission/modify") {
+		user.PsGroup = nil
+		return
+	}
+	if target.Name != user.Name {
+		if !utils.GetPathPermission().HasGroups(authUser.PsGroup, "/permission/modify/username") {
+			utils.JSONErrMsg(ctx, "没有修改名字的权限")
 			return
 		}
 	}

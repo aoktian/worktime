@@ -34,6 +34,15 @@ func (pc *PermissionConfig) GetUserPermissions(groupID int) []string {
 	return group.Permissions
 }
 
+func (pc *PermissionConfig) HasGroups(groups []int, path string) bool {
+	for _, groupID := range groups {
+		if pc.HasPermission(groupID, path) {
+			return true
+		}
+	}
+	return false
+}
+
 // HasPermission 检查用户组是否有访问特定路径的权限
 func (pc *PermissionConfig) HasPermission(groupID int, path string) bool {
 	group, exists := pc.UserGroups[groupID]

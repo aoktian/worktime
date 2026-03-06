@@ -15,4 +15,7 @@ var FuncMap = template.FuncMap{
 	"formatDate":    formatDate,
 	"unixToDay":     unixToDay,
 	"SecondsToTime": secondsToTime,
+	"inSlice":       InSlice,
+	"inStringSlice": InStringSlice,
+	"inIntSlice":    InIntSlice,
 }

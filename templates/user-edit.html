@@ -41,16 +41,6 @@
 </div>
 
 <div class="col-md-4">
-    <label class="form-label">权限组</label>
-    <select vtype="int" name="ps"
-        class="form-select"
-        value="{{.user.Ps}}"
-    >
-{{template "selection_map.html" (dict "values" .psGroups "selected" .user.Ps) }}
-    </select>
-</div>
-
-<div class="col-md-4">
     <label class="form-label">状态</label>
     <select vtype="bool" name="is_leave"
         class="form-select"
@@ -59,6 +49,17 @@
 <option value="1" {{if eq .tag.IsLeave true}}selected{{end}}>离职</option>
     </select>
 </div>
+
+<div class="col-md-12">
+    <label class="form-label">权限组</label>
+    <select id="ps_group" name="ps_group" multiple class="form-select select2-multiple">
+        {{range $key, $value := .psGroups}}
+        <option value="{{$value.Id}}" {{if inIntSlice $value.Id $.user.PsGroup}}selected{{end}}>{{$value.Name}}</option>
+        {{end}}
+    </select>
+</div>
+
+
 
 </div>
 
@@ -69,3 +70,13 @@
         </div>
     </div>
 </div>
+
+<!-- 初始化脚本 -->
+<script>
+$('#ps_group').select2({
+    theme: "bootstrap-5",
+    placeholder: "请选择权限组",
+    closeOnSelect: false,
+    language: "zh-CN"
+});
+</script>

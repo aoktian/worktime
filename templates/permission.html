@@ -1,0 +1,17 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">修改权限文件</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="permission-form">
+
+<textarea itag="val" class="form-control" name="name" rows="30">{{.data}}</textarea>
+
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            <button onclick="ajax('/permission/modify', get_form_values('permission-form'), function() {$('#dialog').modal('hide');})" type="button" class="btn btn-primary">保存</button>
+        </div>
+    </div>
+</div>

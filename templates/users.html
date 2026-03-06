@@ -104,6 +104,11 @@ function _del(id) {
 }
 function _commit() {
     var data = getFormData("#user-edit-form")
+    var new_ps_group = [];
+    for (var i = 0; i < data.ps_group.length; i++) {
+        new_ps_group.push(parseInt(data.ps_group[i]))
+    }
+    data.ps_group = new_ps_group;
     ajax("/user/save", data, function(r) {
         _page();
         $("#dialog").modal("hide");

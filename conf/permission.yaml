@@ -45,6 +45,7 @@ user_groups:
       - "/project/*"
       - "/tag/*"
       - "/user/*"
+      - "/permission/modify/username"
 
   # 超级管理员组 九五至尊
   95:

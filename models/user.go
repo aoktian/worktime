@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"webserver/utils"
 
@@ -19,11 +20,11 @@ type User struct {
 	IsAdmin    bool   `json:"is_admin" xorm:"tinyint(1) notnull default(0) comment('是否管理员')"`
 	CreatedAt  int64  `json:"created_at" xorm:"notnull comment('创建时间') created"`
 	UpdatedAt  int64  `json:"updated_at" xorm:"notnull comment('更新时间') updated"`
-	Ps         int    `json:"ps"` //权限
+	Ps         string `json:"ps"`       //权限
+	IsLeave    bool   `json:"is_leave"` //是否离职
 
-	IsLeave bool `json:"is_leave"` //是否离职
-
-	Token string `json:"token" xorm:"-"`
+	Token   string `json:"token" xorm:"-"`
+	PsGroup []int  `json:"ps_group" xorm:"-"`
 }
 
 func (u *User) SaveUser() error {
@@ -39,8 +40,32 @@ func (u *User) GenerateFromPassword() ([]byte, error) {
 }
 
 func (u *User) BeforeInsert() {
+	u.BeforeUpdate()
+}
+
+func (u *User) BeforeUpdate() {
 	u.Account = strings.TrimSpace(u.Account)
 	u.Name = strings.TrimSpace(u.Name)
+	u.Ps = ""
+	for _, ps := range u.PsGroup {
+		if u.Ps != "" {
+			u.Ps += ","
+		}
+		u.Ps += strconv.Itoa(ps)
+	}
+}
+
+func (u *User) AfterLoad() {
+	ps := strings.Split(u.Ps, ",")
+	u.PsGroup = make([]int, 0)
+	if len(ps) == 0 {
+		u.PsGroup = append(u.PsGroup, 0)
+		return
+	}
+	for _, ps := range ps {
+		psInt, _ := strconv.Atoi(ps)
+		u.PsGroup = append(u.PsGroup, psInt)
+	}
 }
 
 // 对哈希加密的密码进行比对校验

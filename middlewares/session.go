@@ -99,7 +99,7 @@ func AuthSessionMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		if !utils.GetPathPermission().HasPermission(authUser.Ps, ctx.Request.URL.Path) {
+		if !utils.GetPathPermission().HasGroups(authUser.PsGroup, ctx.Request.URL.Path) {
 			utils.ErrorMsg(ctx, "无权限访问，请联系管理员。")
 			ctx.Abort()
 			return

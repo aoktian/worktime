@@ -173,7 +173,7 @@ func (it *FeishuAuth) checkUser(userInfo *feishuUser) (*models.User, error) {
 		has, _ := models.DB.Limit(1).Get(first)
 		if !has {
 			user.IsAdmin = true
-			user.Ps = 95
+			user.PsGroup = []int{95}
 		}
 
 		_, err := models.DB.Insert(user)
