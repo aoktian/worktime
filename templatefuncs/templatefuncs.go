@@ -18,4 +18,6 @@ var FuncMap = template.FuncMap{
 	"inSlice":       InSlice,
 	"inStringSlice": InStringSlice,
 	"inIntSlice":    InIntSlice,
+	"taskColor":     taskColor,
+	"userName":      userName,
 }

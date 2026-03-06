@@ -30,8 +30,8 @@
 
 - id: 970
   name: 废弃
-  color: "status-drop"
+  color: "drop"
 
 - id: 999
   name: 完成
-  color: "status-done"
+  color: "done"
