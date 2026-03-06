@@ -379,7 +379,7 @@ function initEditor( id, focus, height ) {
             ['style', ['style', 'bold', 'italic', 'underline', 'clear']],
             ['font', ['color', 'fontsize']],
             ['para', ['ul', 'ol', 'paragraph']],
-            ['insert', ['hr', 'link', 'table', 'picture', 'video']],
+            ['insert', ['hr', 'link', 'table', 'picture', 'video', 'highlight']],
             ['misc', ['codeview', 'fullscreen', 'help']]
         ],
         height: height,             // set minimum height of editor

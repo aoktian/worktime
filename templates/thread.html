@@ -134,7 +134,7 @@ onchange="_task_priority_change(this.value)"
 <select vtype="int" itag="val" name="leader_dept"
     class="form-select" style="width: 80px;"
     value="{{.task.LeaderDept}}"
-    onchange="onChangePro(this, '#filterLeader' );"
+    onchange="onFirstSelect(this, '#filterLeader' );"
 >
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.LeaderDept) }}
 </select>
@@ -150,7 +150,7 @@ onchange="_task_priority_change(this.value)"
 <select vtype="int" itag="val" name="checker_dept"
     class="form-select" style="width: 80px;"
     value="{{.task.CheckerDept}}"
-    onchange="onChangePro(this, '#filterChecker' );"
+    onchange="onFirstSelect(this, '#filterChecker' );"
 >
 <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.CheckerDept) }}
@@ -167,7 +167,7 @@ onchange="_task_priority_change(this.value)"
 <select vtype="int" itag="val" name="tester_dept"
     class="form-select" style="width: 80px;"
     value="{{.task.TesterDept}}"
-    onchange="onChangePro(this, '#filterTester' );"
+    onchange="onFirstSelect(this, '#filterTester' );"
 >
 <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.TesterDept) }}

@@ -72,7 +72,9 @@ type projectSearch struct {
 }
 
 func (x *Project) index(ctx *gin.Context) {
-	x.list(ctx, &projectSearch{})
+	x.list(ctx, &projectSearch{
+		Page: 1,
+	})
 	utils.HTML(ctx, "projects.html", nil)
 }
 

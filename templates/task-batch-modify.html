@@ -17,7 +17,7 @@ itag="val" vtype="int" name="tag"
 <select itag="val" vtype="int" name="leader_dept"
 class="form-select" style="width: 80px;"
 value="0"
-onchange="onChangePro(this, '#batchModifyLeader' );"
+onchange="onFirstSelect(this, '#batchModifyLeader' );"
 >
 <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
@@ -36,7 +36,7 @@ value="0"
 <select itag="val" vtype="int" name="checker_dept"
 class="form-select" style="width: 80px;"
 value="0"
-onchange="onChangePro(this, '#batchModifyChecker' );"
+onchange="onFirstSelect(this, '#batchModifyChecker' );"
 >
 <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" 0) }}
@@ -53,7 +53,7 @@ itag="val" vtype="int" name="checker"
 <div class="input-group-text">测试</div>
 <select itag="val" vtype="int" name="tester_dept"
 class="form-select" style="width: 80px;"
-onchange="onChangePro(this, '#batchModifyTester' );"
+onchange="onFirstSelect(this, '#batchModifyTester' );"
 >
 <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" 0) }}

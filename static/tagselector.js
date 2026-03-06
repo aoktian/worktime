@@ -1,5 +1,5 @@
 // 当项目改变时，清空版本并重置
-function onChangePro(o, tagSelect) {
+function onFirstSelect(o, tagSelect) {
     var $tagSelect = $(tagSelect);
     $tagSelect.attr("project_id", $(o).val())
 

@@ -21,7 +21,7 @@
     <select vtype="int" itag="val" name="leader_dept"
         class="form-select" style="width: 80px;"
         value="{{.filter.LeaderDept}}"
-        onchange="onChangePro(this, '#filterLeader');_taskList( 1 );"
+        onchange="onFirstSelect(this, '#filterLeader');_taskList( 1 );"
     >
         <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .filter.LeaderDept) }}
@@ -40,7 +40,7 @@
     <select vtype="int" itag="val" name="checker_dept"
         class="form-select" style="width: 80px;"
         value="{{.filter.CheckerDept}}"
-        onchange="onChangePro(this, '#filterChecker');_taskList( 1 );"
+        onchange="onFirstSelect(this, '#filterChecker');_taskList( 1 );"
     >
         <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .filter.CheckerDept) }}
@@ -58,7 +58,7 @@
     <select vtype="int" itag="val" name="tester_dept"
         class="form-select" style="width: 80px;"
         value="{{.filter.TesterDept}}"
-        onchange="onChangePro(this, '#filterTester');_taskList( 1 );"
+        onchange="onFirstSelect(this, '#filterTester');_taskList( 1 );"
     >
         <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .filter.TesterDept) }}
@@ -75,7 +75,7 @@
     <select vtype="int" itag="val" name="author_dept"
         class="form-select" style="width: 80px;"
         value="{{.filter.AuthorDept}}"
-        onchange="onChangePro(this, '#filterAuthor' );_taskList( 1 );"
+        onchange="onFirstSelect(this, '#filterAuthor' );_taskList( 1 );"
     >
         <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .filter.AuthorDept) }}
@@ -215,7 +215,7 @@
 {{template "footer.html" .}}
 
 <script type="text/javascript">
-bodyWidth = "1850px";
+bodyWidth = "1930px";
 
 function filter_title(val) {
     val = val.trim();

@@ -2,16 +2,20 @@
 
 - id: 9
   name: 低
+  alias: P3
   color: low
 
 - id: 99
   name: 中
+  alias: P2
   color: middle
 
 - id: 999
   name: 高
+  alias: P1
   color: high
 
 - id: 99999
   name: 急
+  alias: P0
   color: hhigh

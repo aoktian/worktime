@@ -364,6 +364,7 @@ func (x *Task) addTaskUsers(templateData map[string]any, task *models.Task) {
 	taskUsers := make(map[int64]*models.User)
 	models.DB.Where("id = ? or id = ? or id = ? or id = ? or id = ?", task.Author, task.Editor, task.Leader, task.Checker, task.Tester).
 		Find(&taskUsers)
+	taskUsers[0] = &models.User{Name: "-"}
 	templateData["author"] = taskUsers[task.Author]
 	templateData["editor"] = taskUsers[task.Editor]
 	templateData["leader"] = taskUsers[task.Leader]
@@ -393,6 +394,8 @@ func (x *Task) addListUsers(templateData map[string]any, results []*listTask) {
 
 	users := make(map[int64]*models.User)
 	models.DB.In("id", userIds).Or("is_leave = 0").Find(&users)
+
+	users[0] = &models.User{Id: 0, Name: "-"}
 
 	templateData["users"] = users
 }
@@ -640,8 +643,6 @@ func (x *Task) Related(ctx *gin.Context) {
 		"tasks":      tasks,
 		"pagination": &utils.Pagination{Page: 1, Total: int64(len(tasks)), Size: 10000},
 
-		"users": getUsers(),
-
 		"props": map[string]any{
 			"caty":       models.CatyDict,
 			"status":     models.StatusDict,
@@ -649,6 +650,7 @@ func (x *Task) Related(ctx *gin.Context) {
 			"department": models.DepartmentDict,
 		},
 	}
+	x.addListUsers(h, tasks)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"#related-tasks": utils.RenderedTemplateContent(ctx, "task-related.html", h),

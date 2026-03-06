@@ -90,7 +90,7 @@
     <div class="input-group-text">执行</div>
     <select vtype="int" itag="val" name="leader_dept"
         class="form-select" style="width: 80px;"
-        onchange="onChangePro(this, '#filterLeader');"
+        onchange="onFirstSelect(this, '#filterLeader');"
     >
         <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.LeaderDept) }}
@@ -106,7 +106,7 @@
     <div class="input-group-text">验收</div>
     <select vtype="int" itag="val" name="checker_dept"
         class="form-select" style="width: 80px;"
-        onchange="onChangePro(this, '#filterChecker');"
+        onchange="onFirstSelect(this, '#filterChecker');"
     >
         <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.CheckerDept) }}
@@ -122,7 +122,7 @@
     <div class="input-group-text">测试</div>
     <select vtype="int" itag="val" name="tester_dept"
         class="form-select" style="width: 80px;"
-        onchange="onChangePro(this, '#filterTester');"
+        onchange="onFirstSelect(this, '#filterTester');"
     >
         <option value="0">部门</option>
 {{template "selection_map.html" (dict "values" .props.department "selected" .task.TesterDept) }}
