@@ -120,7 +120,11 @@ func startWebServer() {
 
 	// 处理404请求并重定向到index.html
 	r.NoRoute(func(c *gin.Context) {
-		c.HTML(http.StatusOK, "404.html", nil)
+		if utils.IsAjax(c) {
+			utils.JSONErrMsg(c, "404 - Page Not Found")
+		} else {
+			c.HTML(http.StatusOK, "404.html", nil)
+		}
 	})
 
 	gin.SetMode(utils.AppConfig.Server.GIN_MODE)

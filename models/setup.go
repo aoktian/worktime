@@ -29,11 +29,6 @@ func ConnectDatabase() {
 
 	DB = database
 
-	cacher := xorm.NewLRUCacher(xorm.NewMemoryStore(), 10000)
-	database.MapCacher(&Tag{}, cacher)
-	database.MapCacher(&User{}, cacher)
-	database.MapCacher(&Project{}, cacher)
-
 	// 使用与 gin 相同的日志输出，确保 XORM 日志也写入文件和控制台
 	multiWriter := utils.GetMultiWriter()
 	xormLogger := xorm.NewSimpleLogger(multiWriter)
