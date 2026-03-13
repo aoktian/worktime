@@ -850,7 +850,17 @@ func (x *Task) Save(ctx *gin.Context) {
 	}
 
 	if update.Id > 0 {
-		_, err := models.DB.Id(update.Id).Update(update)
+		mustColumns := []string{}
+		if task.StartAt != update.StartAt {
+			mustColumns = append(mustColumns, "start_at")
+		}
+		if task.EndAt != update.EndAt {
+			mustColumns = append(mustColumns, "end_at")
+		}
+		if task.ActualAt != update.ActualAt {
+			mustColumns = append(mustColumns, "actual_at")
+		}
+		_, err := models.DB.Id(update.Id).MustCols(mustColumns...).Update(update)
 		if err != nil {
 			utils.JSONError(ctx, err)
 			return

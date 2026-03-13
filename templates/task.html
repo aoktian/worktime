@@ -152,7 +152,7 @@
             class="form-control"
             placeholder="标题模糊或精确ID"
             value="{{$.filter.Title}}"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();filter_title(this.value);}"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();filter_title(this);}"
         />
     </div>
 </div>
@@ -217,13 +217,15 @@
 <script type="text/javascript">
 bodyWidth = "1930px";
 
-function filter_title(val) {
+function filter_title(input) {
+    var val = input.value;
     val = val.trim();
     if (val == "") {
         return;
     }
     const isId = val.match(/^[0-9]+$/);
     if (isId) {
+        input.value = "";
         window.open("/task/thread/" + val);
         return
     }

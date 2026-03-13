@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -103,4 +104,105 @@ func FeishuWebhook(body string, id string) {
 	if data.Code != 0 {
 		GetLogger().Errorf("Webhook error: %s", bodyBytes)
 	}
+}
+
+const tmp_text = `
+{
+    "schema": "2.0",
+    "config": {
+        "update_multi": true,
+        "style": {
+            "text_size": {
+                "normal_v2": {
+                    "default": "normal",
+                    "pc": "normal",
+                    "mobile": "heading"
+                }
+            }
+        }
+    },
+	"header": {
+        "title": {
+            "tag": "plain_text",
+            "content": "%s"
+        },
+        "subtitle": {
+            "tag": "plain_text",
+            "content": ""
+        },
+        "template": "default",
+        "padding": "12px 12px 12px 12px"
+    },
+    "body": {
+        "direction": "vertical",
+        "padding": "12px 12px 12px 12px",
+        "elements": [
+            {
+                "tag": "div",
+                "text": {
+                    "tag": "plain_text",
+                    "content": "%s",
+                    "text_size": "normal_v2",
+                    "text_align": "left",
+                    "text_color": "default"
+                },
+                "margin": "0px 0px 0px 0px"
+            }
+        ]
+    }
+}
+`
+
+const webhook_text_tmp = `
+{
+  "msg_type": "interactive",
+  "card": {
+    "schema": "2.0",
+    "config": {
+        "update_multi": true,
+        "style": {
+            "text_size": {
+                "normal_v2": {
+                    "default": "normal",
+                    "pc": "normal",
+                    "mobile": "heading"
+                }
+            }
+        }
+    },
+    "body": {
+        "direction": "vertical",
+        "padding": "12px 12px 12px 12px",
+        "elements": [
+            {
+                "tag": "markdown",
+                "content": "%s",
+                "text_align": "left",
+                "text_size": "normal_v2",
+                "margin": "0px 0px 0px 0px"
+            }
+        ]
+    }
+  }
+}
+	`
+
+func FeishuText(user, title, content string) {
+	// 转义特殊字符，防止破坏JSON结构或Markdown渲染
+	escapedContent := strings.ReplaceAll(content, "\"", "\\\"")
+	escapedContent = strings.ReplaceAll(escapedContent, "\n", "\\n")
+	escapedContent = strings.ReplaceAll(escapedContent, "\r", "\\r")
+
+	s := fmt.Sprintf(tmp_text, title, escapedContent)
+	FeishuAddMsgToChannel(user, s)
+}
+
+func FeishuTextWebhook(hookid, content string) {
+	// 转义特殊字符，防止破坏JSON结构或Markdown渲染
+	escapedContent := strings.ReplaceAll(content, "\"", "\\\"")
+	escapedContent = strings.ReplaceAll(escapedContent, "\n", "\\n")
+	escapedContent = strings.ReplaceAll(escapedContent, "\r", "\\r")
+
+	s := fmt.Sprintf(webhook_text_tmp, escapedContent)
+	FeishuWebhook(s, hookid)
 }

@@ -24,7 +24,7 @@
 
 <div class="card mt-3 mb-3">
 <div class="card-header d-flex align-items-center">
-    <div onclick="$('#task-detail').toggle();"><b>#{{.task.Id}} <span class="task-title">{{.task.Title}}</span></b></div>
+    <div><b>#{{.task.Id}} <span class="task-title">{{.task.Title}}</span></b></div>
     <div class="ms-auto">
         <button
             class="btn btn-link "
@@ -188,7 +188,8 @@ onchange="_task_priority_change(this.value)"
 <div class="input-group-text">时间</div>
 <input vtype="date2unix" value="{{.task.StartAt | unixToDay}}" type="date" class="form-control" name="start_at" />
 <input vtype="date2unix" value="{{.task.EndAt | unixToDay}}" type="date" class="form-control" name="end_at" />
-<input vtype="date2unix" value="{{.task.ActualAt | unixToDay}}" type="date" class="form-control" name="actual_at" />
+<input data-bs-title="随状态更改" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip"
+    disabled id="fast-actual_at" vtype="date2unix" value="{{.task.ActualAt | unixToDay}}" type="date" class="form-control" name="actual_at" />
 </div></div>
 
 <div class="col-12"><div class="input-group">
@@ -402,6 +403,25 @@ function _fast_modify() {
             delete jsonData[k];
         }
     }
+    // 在对比旧数据后添加状态判断逻辑
+    if (jsonData.hasOwnProperty('status')) {
+        if (jsonData.status == 999) {
+            // 如果 status 等于 999，设置 actual_at 为当前时间戳（秒）
+            jsonData.actual_at = Math.floor(Date.now() / 1000);
+
+            // 将时间戳转换为日期字符串格式 YYYY-MM-DD
+            var date = new Date(jsonData.actual_at * 1000);
+            var formattedDate = date.getFullYear() + '-' +
+                               String(date.getMonth() + 1).padStart(2, '0') + '-' +
+                               String(date.getDate()).padStart(2, '0');
+            $('#fast-actual_at').val(formattedDate);
+        } else {
+            // 如果 status 不等于 999，设置 actual_at 为 0
+            jsonData.actual_at = 0;
+            $('#fast-actual_at').val();
+        }
+
+    }
     if (Object.keys(jsonData).length == 0) {
         return showErrorToast('没有修改任何数据')
     }
@@ -494,6 +514,9 @@ function _initBatchModifyTags() {
     initTagSelect2("/user/selector", "#batchModifyTester", false);
 }
 $(document).ready(function() {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
     initProjectSelect2("#filterProjects", "#filterTags", false)
     initTagSelect2("/tag/selector", "#filterTags", false);
     initTagSelect2("/user/selector", "#filterLeader", false);
