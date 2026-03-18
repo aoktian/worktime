@@ -415,12 +415,7 @@ function _fast_modify() {
                                String(date.getMonth() + 1).padStart(2, '0') + '-' +
                                String(date.getDate()).padStart(2, '0');
             $('#fast-actual_at').val(formattedDate);
-        } else {
-            // 如果 status 不等于 999，设置 actual_at 为 0
-            jsonData.actual_at = 0;
-            $('#fast-actual_at').val();
         }
-
     }
     if (Object.keys(jsonData).length == 0) {
         return showErrorToast('没有修改任何数据')
