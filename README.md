@@ -94,20 +94,12 @@ chmod +x service.sh
     └── status.yaml         # 状态
 ```
 
-## 视频教程
+## 使用教程
 
-1. [介绍](https://www.bilibili.com/video/BV13sjZzgEEa/?share_source=copy_web&vd_source=42766cd92882fca8c755bb74903c2aa8)
-2. [安装部署]( https://www.bilibili.com/video/BV1StjZzTEzY/?share_source=copy_web&vd_source=42766cd92882fca8c755bb74903c2aa8)
+[WORKTIME 管理学](https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzYzMzc3Nzk0NA==&action=getalbum&album_id=4406548476042510337#wechat_redirect)
 
-3. 接入飞书授权登录
-
-4. 最佳实践 - 版本管理
-5. 最佳实践 - 离职人员的处理
-6. 最佳实践 - 上传图片的存储
-7. 最佳实践 - 负责人的使用方法
-8. 最佳实践 - 验收人的使用方法
-9. 最佳实践 - 品控人的使用方法
-10. 最佳实践 - 管理者的使用方法
+## 公众号
+<img src="https://github.com/aoktian/worktime/static/wxmp.png" />
 
 
 ## 许可证
