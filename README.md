@@ -99,7 +99,7 @@ chmod +x service.sh
 [WORKTIME 管理学](https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzYzMzc3Nzk0NA==&action=getalbum&album_id=4406548476042510337#wechat_redirect)
 
 ## 公众号
-<img src="https://github.com/aoktian/worktime/static/wxmp.png" />
+<img src="https://github.com/aoktian/worktime/blob/main/static/wxmp.png?raw=true" />
 
 
 ## 许可证
