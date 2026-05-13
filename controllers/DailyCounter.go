@@ -3,8 +3,11 @@ package controllers
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // 全局计数器结构体
@@ -38,7 +41,7 @@ func RenameFileWithAutoIncrement(originalName string) string {
 	ext := filepath.Ext(originalName) // 获取扩展名
 
 	today := time.Now().Format("20060102") // 当前日期
-	id := dailyCounter.GetNextID()         // 获取当日递增ID
+	id := strings.ReplaceAll(uuid.NewString(), "-", "")
 
-	return fmt.Sprintf("%s_%d%s", today, id, ext)
+	return fmt.Sprintf("%s_%s%s", today, id, ext)
 }
